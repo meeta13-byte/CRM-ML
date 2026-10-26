@@ -1,0 +1,12 @@
+.DS_Store
+.venv/
+__pycache__/
+*.pyc
+.env
+
+# Datasets stay local: Kaggle licences do not allow redistribution.
+data/raw/*
+!data/raw/.gitkeep
+
+# Trained pipelines are small and make the dashboard work without retraining.
+reports/figures/*.png

@@ -1,0 +1,203 @@
+{
+  "stage": "Stage 1",
+  "created": "2026-10-27T00:26:42",
+  "dataset": {
+    "source": "kaggle: loveall/clicks-conversion-tracking",
+    "file": "/Users/meetagrawal/Documents/CRM-Adv/data/raw/KAG_conversion_data.csv",
+    "raw_rows": 1143,
+    "rows_after_min_spend": 915,
+    "min_spend": 1.0,
+    "target_cpa": 30.59,
+    "positive_rate": 0.7235,
+    "feature_note": "planning fields only; spend/clicks/impressions excluded"
+  },
+  "target": "high_cpa (cost per acquisition above target)",
+  "features": [
+    {
+      "name": "age",
+      "kind": "categorical",
+      "categories": [
+        "30-34",
+        "35-39",
+        "40-44",
+        "45-49"
+      ]
+    },
+    {
+      "name": "gender",
+      "kind": "categorical",
+      "categories": [
+        "F",
+        "M"
+      ]
+    },
+    {
+      "name": "interest",
+      "kind": "categorical",
+      "categories": [
+        "10",
+        "100",
+        "101",
+        "102",
+        "103",
+        "104",
+        "105",
+        "106",
+        "107",
+        "108",
+        "109",
+        "110",
+        "111",
+        "112",
+        "113",
+        "114",
+        "15",
+        "16",
+        "18",
+        "19",
+        "2",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "32",
+        "36",
+        "63",
+        "64",
+        "65",
+        "66",
+        "7"
+      ]
+    },
+    {
+      "name": "campaign",
+      "kind": "categorical",
+      "categories": [
+        "1178",
+        "916",
+        "936"
+      ]
+    }
+  ],
+  "train_rows": 732,
+  "test_rows": 183,
+  "positive_rate": 0.7235,
+  "best_model": "LinearSVM",
+  "selection_rule": "highest test macro-F1; recall breaks ties",
+  "majority_baseline": 0.7213,
+  "models": [
+    {
+      "algorithm": "KNN",
+      "accuracy": 0.6066,
+      "precision": 0.7113,
+      "recall": 0.7652,
+      "f1": 0.7372,
+      "macro_f1": 0.4773,
+      "balanced_accuracy": 0.4806,
+      "majority_baseline": 0.7213,
+      "roc_auc": 0.5177,
+      "cv_score": 0.5518,
+      "best_params": {
+        "metric": "manhattan",
+        "n_neighbors": 15,
+        "weights": "distance"
+      },
+      "confusion_matrix": [
+        [
+          10,
+          41
+        ],
+        [
+          31,
+          101
+        ]
+      ]
+    },
+    {
+      "algorithm": "GaussianNB",
+      "accuracy": 0.388,
+      "precision": 0.6786,
+      "recall": 0.2879,
+      "f1": 0.4043,
+      "macro_f1": 0.3875,
+      "balanced_accuracy": 0.4675,
+      "majority_baseline": 0.7213,
+      "roc_auc": 0.4708,
+      "cv_score": 0.3618,
+      "best_params": {
+        "var_smoothing": 1e-05
+      },
+      "confusion_matrix": [
+        [
+          33,
+          18
+        ],
+        [
+          94,
+          38
+        ]
+      ]
+    },
+    {
+      "algorithm": "LinearSVM",
+      "accuracy": 0.5792,
+      "precision": 0.7619,
+      "recall": 0.6061,
+      "f1": 0.6751,
+      "macro_f1": 0.5391,
+      "balanced_accuracy": 0.5579,
+      "majority_baseline": 0.7213,
+      "roc_auc": 0.5861,
+      "cv_score": 0.5945,
+      "best_params": {
+        "C": 1,
+        "class_weight": "balanced"
+      },
+      "confusion_matrix": [
+        [
+          26,
+          25
+        ],
+        [
+          52,
+          80
+        ]
+      ]
+    },
+    {
+      "algorithm": "RBFSVM",
+      "accuracy": 0.5847,
+      "precision": 0.7414,
+      "recall": 0.6515,
+      "f1": 0.6935,
+      "macro_f1": 0.5247,
+      "balanced_accuracy": 0.5316,
+      "majority_baseline": 0.7213,
+      "roc_auc": 0.5919,
+      "cv_score": 0.5842,
+      "best_params": {
+        "C": 1,
+        "class_weight": "balanced",
+        "gamma": "scale"
+      },
+      "confusion_matrix": [
+        [
+          21,
+          30
+        ],
+        [
+          46,
+          86
+        ]
+      ]
+    }
+  ]
+}

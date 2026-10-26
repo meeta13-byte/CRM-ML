@@ -1,0 +1,156 @@
+{
+  "dataset": {
+    "source": "kaggle: amritachatterjee09/lead-scoring-dataset (X Education)",
+    "file": "/Users/meetagrawal/Documents/CRM-Adv/data/raw/Lead Scoring.csv",
+    "rows": 9240,
+    "duplicates_removed": 0,
+    "positive_rate": 0.3854,
+    "dropped_columns": [
+      "Prospect ID",
+      "Lead Number",
+      "Tags",
+      "Lead Quality",
+      "Lead Profile",
+      "Last Notable Activity",
+      "Last Activity",
+      "Asymmetrique Activity Index",
+      "Asymmetrique Profile Index",
+      "Asymmetrique Activity Score",
+      "Asymmetrique Profile Score"
+    ],
+    "include_snapshot_fields": false
+  },
+  "rows": 9240,
+  "k": 3,
+  "silhouette": 0.225,
+  "silhouette_best": 0.2468,
+  "k_best_silhouette": 10,
+  "ari_kmeans_vs_hierarchical": 0.554,
+  "elbow": [
+    {
+      "k": 2,
+      "inertia": 48051.31
+    },
+    {
+      "k": 3,
+      "inertia": 42672.01
+    },
+    {
+      "k": 4,
+      "inertia": 39494.5
+    },
+    {
+      "k": 5,
+      "inertia": 36271.79
+    },
+    {
+      "k": 6,
+      "inertia": 33792.09
+    },
+    {
+      "k": 7,
+      "inertia": 31747.97
+    },
+    {
+      "k": 8,
+      "inertia": 30304.52
+    },
+    {
+      "k": 9,
+      "inertia": 28532.82
+    },
+    {
+      "k": 10,
+      "inertia": 27559.19
+    }
+  ],
+  "silhouette_by_k": [
+    {
+      "k": 2,
+      "score": 0.2176
+    },
+    {
+      "k": 3,
+      "score": 0.225
+    },
+    {
+      "k": 4,
+      "score": 0.218
+    },
+    {
+      "k": 5,
+      "score": 0.2218
+    },
+    {
+      "k": 6,
+      "score": 0.2054
+    },
+    {
+      "k": 7,
+      "score": 0.2077
+    },
+    {
+      "k": 8,
+      "score": 0.2206
+    },
+    {
+      "k": 9,
+      "score": 0.2415
+    },
+    {
+      "k": 10,
+      "score": 0.2468
+    }
+  ],
+  "profiles": [
+    {
+      "cluster": 3,
+      "leads": 2590,
+      "share": 0.28,
+      "conversion_rate": 0.698,
+      "tier": "hot",
+      "mean TotalVisits": 4.66,
+      "mean Total Time Spent on Website": 1279.5,
+      "mean Page Views Per Visit": 3.13,
+      "Lead Origin": "Landing Page Submission",
+      "Lead Source": "Google",
+      "A free copy of Mastering The Interview": "No",
+      "Specialization": "Finance Management"
+    },
+    {
+      "cluster": 2,
+      "leads": 3253,
+      "share": 0.352,
+      "conversion_rate": 0.339,
+      "tier": "warm",
+      "mean TotalVisits": 0.84,
+      "mean Total Time Spent on Website": 82.93,
+      "mean Page Views Per Visit": 0.59,
+      "Lead Origin": "API",
+      "Lead Source": "Olark Chat",
+      "A free copy of Mastering The Interview": "No",
+      "Specialization": "Marketing Management"
+    },
+    {
+      "cluster": 1,
+      "leads": 3397,
+      "share": 0.368,
+      "conversion_rate": 0.192,
+      "tier": "cold",
+      "mean TotalVisits": 5.01,
+      "mean Total Time Spent on Website": 271.61,
+      "mean Page Views Per Visit": 3.47,
+      "Lead Origin": "Landing Page Submission",
+      "Lead Source": "Direct Traffic",
+      "A free copy of Mastering The Interview": "Yes",
+      "Specialization": "Finance Management"
+    }
+  ],
+  "figures": [
+    "reports/figures/elbow.png",
+    "reports/figures/silhouette.png",
+    "reports/figures/kmeans_pca.png",
+    "reports/figures/hierarchical_pca.png",
+    "reports/figures/dendrogram.png"
+  ]
+}
