@@ -57,10 +57,13 @@ def _inputs(specs, prefix):
     return values
 
 
-def _result(result):
+def _result(result, risk=False):
+    """Stage 1 predicts a miss, so its number is a risk, not a priority."""
     left, right = st.columns(2)
-    left.metric("Probability", f"{result['probability']:.1%}")
-    right.metric("Priority", result["priority"])
+    label = "Risk of missing target CPA" if risk else "Probability"
+    left.metric(label, f"{result['probability']:.1%}")
+    right.metric("Risk band" if risk else "Priority",
+                 f"{result['priority']} risk" if risk else result["priority"])
     st.progress(min(max(result["probability"], 0.0), 1.0))
     st.caption(DISCLAIMER)
 
@@ -142,9 +145,12 @@ with tab_campaign:
         st.write(f"**Data source:** {source} · trained on {meta['train_rows']} campaigns · "
                  f"target CPA = {meta['dataset'].get('target_cpa')}")
         payload = _inputs(meta["features"], "stage1")
+        st.caption("Stage 1 answers: *will this campaign's cost per acquisition end up "
+                   f"above **${meta['dataset'].get('target_cpa')}**?* The score is the "
+                   "predicted risk of missing that target.")
         if st.button("Predict campaign performance", type="primary"):
             try:
-                _result(score("stage1", payload))
+                _result(score("stage1", payload), risk=True)
             except Exception as exc:  # user input outside training space, etc.
                 st.error(f"Could not score this campaign: {exc}")
 
