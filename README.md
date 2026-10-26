@@ -16,7 +16,7 @@ Both datasets are real. They are never joined and no rows are fabricated.
 python3 -m src.train_conversion     # four-model comparison -> models/
 python3 -m src.experiments          # K sweep + test-size comparison -> models/
 python3 -m src.clustering           # K-Means + hierarchical -> models/
-streamlit run app/streamlit_app.py  # 7-tab demo
+streamlit run app/streamlit_app.py  # MarketMind AI dashboard
 python3 tests/smoke.py              # fast self-check, no real data needed
 ```
 
@@ -201,9 +201,19 @@ target is used only to describe clusters, never to form them.
 
 ---
 
-## 5. Streamlit app (7 tabs)
+## 5. MarketMind AI UI (9 pages)
 
-1. **Dashboard** — key metrics, module map, model table, limitations.
+A persistent sidebar groups the pages:
+
+- **Overview** — Dashboard, Campaign Intelligence, Lead Conversion Prediction,
+  Customer Segmentation
+- **Machine Learning** — Model Comparison, Dataset & Training History,
+  Prediction History
+- **Workspace** — Settings, About
+
+1. **Dashboard** — dataset records, best-model F1, saved predictions and the
+   observed conversion rate, followed by model performance, class distribution,
+   campaign summary, recent predictions, training status and quick actions.
 2. **Campaign Intelligence** — dataset overview and charts, planning form with
    coverage tags, objective-specific benchmark, save to history.
 3. **Lead Conversion Prediction** — one of the four models or compare all four
@@ -217,6 +227,13 @@ target is used only to describe clusters, never to form them.
    paths.
 7. **Prediction History** — saved conversion predictions with editable actual
    outcomes, plus saved campaign analyses.
+8. **Settings** — artifact status, storage paths, history download, palette.
+9. **About** — modules, datasets, method notes and limitations.
+
+The palette lives once in `src/config.py:PALETTE` and is imported by
+`app/theme.py`, which owns the CSS, reusable KPI/badge/stat helpers and the
+matplotlib chart builders. Saved figures in `reports/figures/` use the same
+colours. Plotly is not required; every chart is matplotlib.
 
 Probabilities are shown for all four because all four are fitted with
 `predict_proba`: SVCs use Platt scaling, GaussianNB uses its independence
@@ -242,8 +259,10 @@ Delete the file to reset history.
 ## 6. Project layout
 
 ```
-app/streamlit_app.py      7-tab UI (reads artifacts, never trains)
-src/config.py             paths, seed, sample size, selection metric, bands
+app/streamlit_app.py      9-page sidebar UI (reads artifacts, never trains)
+app/theme.py              palette, CSS, cards, matplotlib chart builders
+.streamlit/config.toml    light Streamlit theme
+src/config.py             paths, seed, sample size, selection metric, bands, palette
 src/data/loaders.py       bank + campaign adapters, derived metrics
 src/data/preprocess.py    split + sklearn preprocessing pipeline
 src/data/schema.py        feature contract + leakage guard

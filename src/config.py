@@ -35,3 +35,24 @@ NEIGHBOURS = 25
 BANK_CSV = DATA_RAW / "bank-full.csv"
 CAMPAIGN_CSV = DATA_RAW / "KAG_conversion_data.csv"
 
+# One palette for the app theme, saved figures and report charts.
+PALETTE = {
+    "workspace": "#FFFFFF",
+    "sidebar": "#F7F7FA",
+    "page": "#F9FAFC",
+    "purple": "#8275E8",
+    "purple_deep": "#6659D9",
+    "lavender": "#EAE6FF",
+    "gradient_from": "#7969E8",
+    "gradient_to": "#E4A5F5",
+    "text": "#171717",
+    "muted": "#737780",
+    "border": "#E8E9EE",
+    "card": "#FFFFFF",
+    "orange": "#F28C45",
+    "green": "#24B47E",
+    "blue": "#657FE8",
+    "pink": "#E66C9B",
+    "hover": "#F0EEFA",
+}
+
