@@ -141,8 +141,12 @@ baseline — see limitation 1.
 streamlit run app/streamlit_app.py
 ```
 
-Four tabs: campaign prediction, lead scoring, model comparison, segmentation.
-If a model is missing the tab tells you which command to run.
+Five tabs: **Overview** (headline numbers per stage), **Campaign prediction**,
+**Lead scoring**, **Results & graphs** (metric table, accuracy vs majority
+baseline bar chart, confusion matrices, chosen hyperparameters) and
+**Segmentation** (conversion rate and size per segment, elbow, silhouette, PCA
+views, dendrogram). If a model is missing the tab tells you which command to
+run.
 
 ---
 

@@ -8,5 +8,5 @@ __pycache__/
 data/raw/*
 !data/raw/.gitkeep
 
-# Trained pipelines are small and make the dashboard work without retraining.
-reports/figures/*.png
+# Trained pipelines and report figures are small enough to commit, so the
+# dashboard shows real graphs straight after cloning.

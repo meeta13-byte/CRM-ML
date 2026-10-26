@@ -1,10 +1,11 @@
-"""CRM-Adv dashboard: campaign score, lead score, model comparison, segments.
+"""CRM-Adv dashboard: overview, scores, results and segments.
 
     streamlit run app/streamlit_app.py
 
 Every number shown comes from models/*.json + models/*.joblib created by the
 training scripts. If those are missing, the tab tells you what to run.
 """
+import json
 import sys
 from pathlib import Path
 
@@ -15,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.config import BANDS, FIGURES, MODELS  # noqa: E402
-from src.predict import load_meta, load_model, priority, score  # noqa: E402
+from src.predict import load_meta, load_model, score  # noqa: E402
 
 st.set_page_config(page_title="CRM-Adv", page_icon="📈", layout="wide")
 
@@ -23,12 +24,15 @@ DISCLAIMER = (
     "ML estimate from historical data — not a guarantee. "
     "Predictions are only as good as the data the model was trained on."
 )
+STAGES = [("stage1", "Stage 1 — campaign performance", "Campaign prediction"),
+          ("stage2", "Stage 2 — lead conversion", "Lead scoring")]
 
 st.title("CRM-Adv — marketing & sales intelligence")
 st.caption("Stage 1: campaign performance · Stage 2: lead conversion · Segmentation")
 
-tab_campaign, tab_lead, tab_models, tab_segments = st.tabs(
-    ["Campaign prediction", "Lead scoring", "Model comparison", "Segmentation"]
+tab_overview, tab_campaign, tab_lead, tab_results, tab_segments = st.tabs(
+    ["Overview", "Campaign prediction", "Lead scoring", "Results & graphs",
+     "Segmentation"]
 )
 
 
@@ -60,6 +64,71 @@ def _result(result):
     st.progress(min(max(result["probability"], 0.0), 1.0))
     st.caption(DISCLAIMER)
 
+
+def _tables(meta):
+    """Full metric table + the three bars worth graphing."""
+    table = pd.DataFrame(meta["models"])[
+        ["algorithm", "accuracy", "precision", "recall", "f1",
+         "macro_f1", "roc_auc", "cv_score"]
+    ]
+    chart = table.set_index("algorithm")[["accuracy", "macro_f1", "roc_auc"]]
+    # Visual reference: a model at this height has learned nothing.
+    chart.loc["majority baseline"] = [meta["majority_baseline"], None, None]
+    return table, chart
+
+
+def _confusions(meta, stage):
+    cols = st.columns(4)
+    for col, model in zip(cols, meta["models"]):
+        path = FIGURES / f"{stage}_{model['algorithm'].replace(' ', '_')}.png"
+        if path.exists():
+            col.image(str(path), caption=model["algorithm"])
+        else:
+            col.caption(f"{model['algorithm']}: no figure — retrain to draw it")
+
+
+def _not_trained(stage):
+    st.info("Not trained yet. Run:\n\n"
+            f"`python3 -m src.train_{'stage1' if stage == 'stage1' else 'stage2'}`")
+
+
+with tab_overview:
+    st.subheader("What the system does")
+    st.dataframe(
+        pd.DataFrame([
+            {"Stage": "1. Campaign", "Question": "Will this campaign beat its target cost per acquisition?",
+             "Asked": "before launch", "Features": "age, gender, interest, campaign"},
+            {"Stage": "2. Lead", "Question": "Will this lead convert?",
+             "Asked": "at lead capture", "Features": "25 lead-source, activity and profile fields"},
+            {"Stage": "3. Segments", "Question": "What kinds of leads do we have?",
+             "Asked": "snapshot", "Features": "unsupervised, target used only to describe"},
+        ]),
+        hide_index=True, width="stretch",
+    )
+
+    st.subheader("Best model on the held-out test split")
+    cards = st.columns(3)
+    clusters_path = MODELS / "clusters.json"
+    for col, (stage, label, _) in zip(cards[:2], STAGES):
+        meta = load_meta(stage)
+        if meta is None:
+            col.metric(label, "not trained")
+            continue
+        best = next(m for m in meta["models"] if m["algorithm"] == meta["best_model"])
+        col.metric(f"{label} — {meta['best_model']}", f"macro-F1 {best['macro_f1']:.3f}")
+        col.caption(f"Accuracy {best['accuracy']:.1%} · ROC-AUC {best['roc_auc']:.3f} · "
+                    f"majority baseline {meta['majority_baseline']:.1%}")
+    if clusters_path.exists():
+        c = json.loads(clusters_path.read_text())
+        cards[2].metric("Segments (K-Means)", f"k = {c['k']}")
+        cards[2].caption(f"Silhouette {c['silhouette']} · Ward agreement (ARI) "
+                         f"{c['ari_kmeans_vs_hierarchical']} · {c['rows']} leads")
+
+    st.warning(
+        "Stage 1 is deliberately shown with its weak result: 57.9% accuracy against "
+        "a 72.1% majority baseline. Only four planning features exist, so treat its "
+        "output as a ranking hint, not a forecast. Stage 2 is the model to quote."
+    )
 
 with tab_campaign:
     meta = load_meta("stage1")
@@ -103,40 +172,36 @@ with tab_lead:
             except Exception as exc:
                 st.error(f"Could not score this lead: {exc}")
 
-with tab_models:
+with tab_results:
     st.subheader("Model comparison")
     st.caption("Selection rule: highest test macro-F1; recall breaks ties. "
-               f"Priority bands: High ≥ {BANDS['High']:.0%}, Medium ≥ {BANDS['Medium']:.0%}.")
-    for stage, label in [("stage1", "Stage 1 — campaign performance"),
-                         ("stage2", "Stage 2 — lead conversion")]:
+               "Macro-F1 averages both classes, so 'predict the majority class' "
+               "cannot win. Priority bands: "
+               f"High ≥ {BANDS['High']:.0%}, Medium ≥ {BANDS['Medium']:.0%}.")
+    for stage, label, _ in STAGES:
         meta = load_meta(stage)
         st.markdown(f"### {label}")
         if meta is None:
-            st.info(f"Not trained yet. Run the Stage {'1' if stage == 'stage1' else '2'} training script.")
+            _not_trained(stage)
             continue
-        table = pd.DataFrame(meta["models"])[
-            ["algorithm", "accuracy", "precision", "recall", "f1",
-             "macro_f1", "roc_auc", "cv_score"]
-        ]
+        table, chart = _tables(meta)
+        st.bar_chart(chart, height=320)
+        st.caption("Grey bar is the accuracy of always predicting the majority class.")
         st.dataframe(table, hide_index=True, width="stretch")
-        st.caption(f"Majority-class baseline accuracy: {meta['majority_baseline']:.1%} — "
-                   "any accuracy close to this means the model has learned nothing.")
-        st.success(f"Best model: **{meta['best_model']}**  "
-                   f"(macro-F1 {max(m['macro_f1'] for m in meta['models']):.3f})")
-        with st.expander("Confusion matrices"):
-            cols = st.columns(4)
-            for col, model in zip(cols, meta["models"]):
-                path = FIGURES / f"{stage}_{model['algorithm'].replace(' ', '_')}.png"
-                col.image(str(path), caption=model["algorithm"]) if path.exists() else None
+        st.success(f"Best model: **{meta['best_model']}** "
+                   f"(macro-F1 {max(m['macro_f1'] for m in meta['models']):.3f}, "
+                   f"ROC-AUC {max(m['roc_auc'] for m in meta['models']):.3f})")
+        st.markdown("**Confusion matrices** (test split, rows = truth)")
+        _confusions(meta, stage)
         with st.expander("Chosen hyperparameters"):
             st.json({m["algorithm"]: m["best_params"] for m in meta["models"]})
+        st.divider()
 
 with tab_segments:
     path = MODELS / "clusters.json"
     if not path.exists():
-        st.info("No segments yet. Run `python -m src.clustering`.")
+        st.info("No segments yet. Run `python3 -m src.clustering`.")
     else:
-        import json
         clusters = json.loads(path.read_text())
         st.write(f"**k = {clusters['k']}** · silhouette = {clusters['silhouette']} · "
                  f"best silhouette {clusters.get('silhouette_best')} at "
@@ -146,10 +211,15 @@ with tab_segments:
         st.caption("k is the smallest value within 10% of the best silhouette, so "
                    "extra segments must earn their keep. Flat curves mean the "
                    "clusters are weak — treat segments as rough portraits.")
-        st.info(DISCLAIMER)
 
-        st.dataframe(pd.DataFrame(clusters["profiles"]), hide_index=True,
-                     width="stretch")
+        profiles = pd.DataFrame(clusters["profiles"])
+        left, right = st.columns([1, 1])
+        left.markdown("**Conversion rate per segment**")
+        left.bar_chart(profiles.set_index("cluster")["conversion_rate"], height=260)
+        right.markdown("**Leads per segment**")
+        right.bar_chart(profiles.set_index("cluster")["leads"], height=260)
+
+        st.dataframe(profiles, hide_index=True, width="stretch")
         st.caption(
             "Tier from the observed conversion rate, not from the clustering: "
             "hot ≥ 50%, warm ≥ 30%, cold below. Action: hot — call within 24h; "
@@ -158,7 +228,7 @@ with tab_segments:
 
         left, right = st.columns(2)
         for col, name, caption in [
-            (left, "elbow.png", "Elbow method"),
+            (left, "elbow.png", "Elbow method — WCSS by k"),
             (right, "silhouette.png", "Silhouette by k"),
         ]:
             p = FIGURES / name
@@ -167,8 +237,8 @@ with tab_segments:
 
         left, right = st.columns(2)
         for col, name, caption in [
-            (left, "kmeans_pca.png", "K-Means segments"),
-            (right, "hierarchical_pca.png", "Hierarchical (Ward) segments"),
+            (left, "kmeans_pca.png", "K-Means segments (PCA view)"),
+            (right, "hierarchical_pca.png", "Ward segments (PCA view)"),
         ]:
             p = FIGURES / name
             if p.exists():
@@ -176,7 +246,8 @@ with tab_segments:
 
         p = FIGURES / "dendrogram.png"
         if p.exists():
-            st.image(str(p), caption="Dendrogram (Ward, truncated)")
+            st.image(str(p), caption="Dendrogram (Ward, 300-lead sample, truncated)")
+        st.info(DISCLAIMER)
 
 st.divider()
 st.caption(
