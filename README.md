@@ -104,10 +104,10 @@ Notes:
 ## 4. Train
 
 ```bash
-python -m src.train_stage1         # campaign model  (~5-10 min: SVC grids)
-python -m src.train_stage2         # lead model
-python -m src.clustering           # elbow, K-Means, Ward, dendrogram
-python tests/smoke.py              # 2-second self-check, no real data needed
+python3 -m src.train_stage1         # campaign model  (~3 min: SVC grids)
+python3 -m src.train_stage2         # lead model     (~25 min: SVC probability=True)
+python3 -m src.clustering           # elbow, K-Means, Ward, dendrogram (~1 min)
+python3 tests/smoke.py              # 2-second self-check, no real data needed
 ```
 
 Artifacts:
@@ -118,6 +118,22 @@ models/stage2.joblib, stage2.json
 models/clusters.json
 reports/figures/*.png                # confusion matrices, elbow, PCA, dendrogram
 ```
+
+Trained models are committed, so the dashboard works straight after cloning;
+only the datasets are local.
+
+### Measured results (held-out test split)
+
+| Stage | Best model | Accuracy | Macro-F1 | ROC-AUC | Majority baseline |
+|---|---|---|---|---|---|
+| 1. Campaign (`high_cpa`) | Linear SVM | 0.579 | 0.539 | 0.586 | **0.721** |
+| 2. Lead (`Converted`) | RBF SVM | 0.788 | 0.778 | 0.826 | 0.615 |
+
+Segmentation: k = 3, silhouette 0.225, ARI(K-Means vs Ward) 0.554, segment
+conversion rates 70% / 34% / 19%.
+
+Stage 2 is the model worth presenting. Stage 1 is below its own majority
+baseline — see limitation 1.
 
 ## 5. Dashboard
 

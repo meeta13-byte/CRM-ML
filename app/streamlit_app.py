@@ -118,7 +118,7 @@ with tab_models:
             ["algorithm", "accuracy", "precision", "recall", "f1",
              "macro_f1", "roc_auc", "cv_score"]
         ]
-        st.dataframe(table, hide_index=True, use_container_width=True)
+        st.dataframe(table, hide_index=True, width="stretch")
         st.caption(f"Majority-class baseline accuracy: {meta['majority_baseline']:.1%} — "
                    "any accuracy close to this means the model has learned nothing.")
         st.success(f"Best model: **{meta['best_model']}**  "
@@ -149,7 +149,7 @@ with tab_segments:
         st.info(DISCLAIMER)
 
         st.dataframe(pd.DataFrame(clusters["profiles"]), hide_index=True,
-                     use_container_width=True)
+                     width="stretch")
         st.caption(
             "Tier from the observed conversion rate, not from the clustering: "
             "hot ≥ 50%, warm ≥ 30%, cold below. Action: hot — call within 24h; "

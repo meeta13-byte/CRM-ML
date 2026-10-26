@@ -1,0 +1,420 @@
+{
+  "stage": "Stage 2",
+  "created": "2026-10-27T00:32:51",
+  "dataset": {
+    "source": "kaggle: amritachatterjee09/lead-scoring-dataset (X Education)",
+    "file": "/Users/meetagrawal/Documents/CRM-Adv/data/raw/Lead Scoring.csv",
+    "rows": 9240,
+    "duplicates_removed": 0,
+    "positive_rate": 0.3854,
+    "dropped_columns": [
+      "Prospect ID",
+      "Lead Number",
+      "Tags",
+      "Lead Quality",
+      "Lead Profile",
+      "Last Notable Activity",
+      "Last Activity",
+      "Asymmetrique Activity Index",
+      "Asymmetrique Profile Index",
+      "Asymmetrique Activity Score",
+      "Asymmetrique Profile Score"
+    ],
+    "include_snapshot_fields": false
+  },
+  "target": "converted",
+  "features": [
+    {
+      "name": "Lead Origin",
+      "kind": "categorical",
+      "categories": [
+        "API",
+        "Landing Page Submission",
+        "Lead Add Form",
+        "Lead Import",
+        "Quick Add Form"
+      ]
+    },
+    {
+      "name": "Lead Source",
+      "kind": "categorical",
+      "categories": [
+        "Click2call",
+        "Direct Traffic",
+        "Facebook",
+        "Google",
+        "Live Chat",
+        "NC_EDM",
+        "Olark Chat",
+        "Organic Search",
+        "Pay per Click Ads",
+        "Press_Release",
+        "Reference",
+        "Referral Sites",
+        "Social Media",
+        "WeLearn",
+        "Welingak Website",
+        "bing",
+        "blog",
+        "google",
+        "testone",
+        "welearnblog_Home",
+        "youtubechannel"
+      ]
+    },
+    {
+      "name": "Do Not Email",
+      "kind": "categorical",
+      "categories": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "name": "Do Not Call",
+      "kind": "categorical",
+      "categories": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "name": "TotalVisits",
+      "kind": "numeric",
+      "min": 0.0,
+      "max": 251.0
+    },
+    {
+      "name": "Total Time Spent on Website",
+      "kind": "numeric",
+      "min": 0.0,
+      "max": 2272.0
+    },
+    {
+      "name": "Page Views Per Visit",
+      "kind": "numeric",
+      "min": 0.0,
+      "max": 55.0
+    },
+    {
+      "name": "Country",
+      "kind": "categorical",
+      "categories": [
+        "Asia/Pacific Region",
+        "Australia",
+        "Bahrain",
+        "Bangladesh",
+        "Belgium",
+        "Canada",
+        "China",
+        "Denmark",
+        "France",
+        "Germany",
+        "Ghana",
+        "Hong Kong",
+        "India",
+        "Indonesia",
+        "Italy",
+        "Kenya",
+        "Kuwait",
+        "Liberia",
+        "Malaysia",
+        "Netherlands",
+        "Nigeria",
+        "Oman",
+        "Philippines",
+        "Qatar",
+        "Russia",
+        "Saudi Arabia",
+        "Singapore",
+        "South Africa",
+        "Sri Lanka",
+        "Sweden",
+        "Switzerland",
+        "Tanzania",
+        "Uganda",
+        "United Arab Emirates",
+        "United Kingdom",
+        "United States",
+        "Vietnam",
+        "unknown"
+      ]
+    },
+    {
+      "name": "Specialization",
+      "kind": "categorical",
+      "categories": [
+        "Banking, Investment And Insurance",
+        "Business Administration",
+        "E-Business",
+        "E-COMMERCE",
+        "Finance Management",
+        "Healthcare Management",
+        "Hospitality Management",
+        "Human Resource Management",
+        "IT Projects Management",
+        "International Business",
+        "Marketing Management",
+        "Media and Advertising",
+        "Operations Management",
+        "Retail Management",
+        "Rural and Agribusiness",
+        "Services Excellence",
+        "Supply Chain Management",
+        "Travel and Tourism"
+      ]
+    },
+    {
+      "name": "How did you hear about X Education",
+      "kind": "categorical",
+      "categories": [
+        "Advertisements",
+        "Email",
+        "Multiple Sources",
+        "Online Search",
+        "Other",
+        "SMS",
+        "Social Media",
+        "Student of SomeSchool",
+        "Word Of Mouth"
+      ]
+    },
+    {
+      "name": "What is your current occupation",
+      "kind": "categorical",
+      "categories": [
+        "Businessman",
+        "Housewife",
+        "Other",
+        "Student",
+        "Unemployed",
+        "Working Professional"
+      ]
+    },
+    {
+      "name": "What matters most to you in choosing a course",
+      "kind": "categorical",
+      "categories": [
+        "Better Career Prospects",
+        "Flexibility & Convenience",
+        "Other"
+      ]
+    },
+    {
+      "name": "Search",
+      "kind": "categorical",
+      "categories": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "name": "Magazine",
+      "kind": "categorical",
+      "categories": [
+        "No"
+      ]
+    },
+    {
+      "name": "Newspaper Article",
+      "kind": "categorical",
+      "categories": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "name": "X Education Forums",
+      "kind": "categorical",
+      "categories": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "name": "Newspaper",
+      "kind": "categorical",
+      "categories": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "name": "Digital Advertisement",
+      "kind": "categorical",
+      "categories": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "name": "Through Recommendations",
+      "kind": "categorical",
+      "categories": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "name": "Receive More Updates About Our Courses",
+      "kind": "categorical",
+      "categories": [
+        "No"
+      ]
+    },
+    {
+      "name": "Update me on Supply Chain Content",
+      "kind": "categorical",
+      "categories": [
+        "No"
+      ]
+    },
+    {
+      "name": "Get updates on DM Content",
+      "kind": "categorical",
+      "categories": [
+        "No"
+      ]
+    },
+    {
+      "name": "City",
+      "kind": "categorical",
+      "categories": [
+        "Mumbai",
+        "Other Cities",
+        "Other Cities of Maharashtra",
+        "Other Metro Cities",
+        "Thane & Outskirts",
+        "Tier II Cities"
+      ]
+    },
+    {
+      "name": "I agree to pay the amount through cheque",
+      "kind": "categorical",
+      "categories": [
+        "No"
+      ]
+    },
+    {
+      "name": "A free copy of Mastering The Interview",
+      "kind": "categorical",
+      "categories": [
+        "No",
+        "Yes"
+      ]
+    }
+  ],
+  "train_rows": 7392,
+  "test_rows": 1848,
+  "positive_rate": 0.3854,
+  "best_model": "RBFSVM",
+  "selection_rule": "highest test macro-F1; recall breaks ties",
+  "majority_baseline": 0.6147,
+  "models": [
+    {
+      "algorithm": "KNN",
+      "accuracy": 0.7803,
+      "precision": 0.7542,
+      "recall": 0.6376,
+      "f1": 0.691,
+      "macro_f1": 0.7603,
+      "balanced_accuracy": 0.7537,
+      "majority_baseline": 0.6147,
+      "roc_auc": 0.8181,
+      "cv_score": 0.7791,
+      "best_params": {
+        "metric": "euclidean",
+        "n_neighbors": 11,
+        "weights": "uniform"
+      },
+      "confusion_matrix": [
+        [
+          988,
+          148
+        ],
+        [
+          258,
+          454
+        ]
+      ]
+    },
+    {
+      "algorithm": "GaussianNB",
+      "accuracy": 0.4015,
+      "precision": 0.3895,
+      "recall": 0.9747,
+      "f1": 0.5565,
+      "macro_f1": 0.3182,
+      "balanced_accuracy": 0.5085,
+      "majority_baseline": 0.6147,
+      "roc_auc": 0.6863,
+      "cv_score": 0.3614,
+      "best_params": {
+        "var_smoothing": 1e-05
+      },
+      "confusion_matrix": [
+        [
+          48,
+          1088
+        ],
+        [
+          18,
+          694
+        ]
+      ]
+    },
+    {
+      "algorithm": "LinearSVM",
+      "accuracy": 0.7879,
+      "precision": 0.726,
+      "recall": 0.7219,
+      "f1": 0.7239,
+      "macro_f1": 0.7759,
+      "balanced_accuracy": 0.7756,
+      "majority_baseline": 0.6147,
+      "roc_auc": 0.8173,
+      "cv_score": 0.789,
+      "best_params": {
+        "C": 1,
+        "class_weight": "balanced"
+      },
+      "confusion_matrix": [
+        [
+          942,
+          194
+        ],
+        [
+          198,
+          514
+        ]
+      ]
+    },
+    {
+      "algorithm": "RBFSVM",
+      "accuracy": 0.7884,
+      "precision": 0.7184,
+      "recall": 0.7416,
+      "f1": 0.7298,
+      "macro_f1": 0.778,
+      "balanced_accuracy": 0.7797,
+      "majority_baseline": 0.6147,
+      "roc_auc": 0.8259,
+      "cv_score": 0.8003,
+      "best_params": {
+        "C": 1,
+        "class_weight": "balanced",
+        "gamma": "scale"
+      },
+      "confusion_matrix": [
+        [
+          929,
+          207
+        ],
+        [
+          184,
+          528
+        ]
+      ]
+    }
+  ]
+}
