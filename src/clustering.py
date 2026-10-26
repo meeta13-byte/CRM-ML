@@ -11,13 +11,14 @@ only used afterwards to describe them.
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 from scipy.cluster.hierarchy import dendrogram, linkage
 from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import adjusted_rand_score, silhouette_score
 
-from .config import FIGURES, MODELS, RANDOM_STATE
+from .config import FIGURES, MODELS, PALETTE, RANDOM_STATE
 from .data.loaders import load_bank
 from .data.preprocess import build_preprocessor
 from .evaluate import save_json
@@ -98,42 +99,79 @@ def main():
 def _figures(matrix, kmeans, hier, idx, inertia, silhouettes, best_k):
     FIGURES.mkdir(parents=True, exist_ok=True)
     ks = list(K_RANGE)
+    p = PALETTE
+    plt.rcParams.update({
+        "figure.facecolor": p["workspace"],
+        "axes.facecolor": p["workspace"],
+        "savefig.facecolor": p["workspace"],
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Inter", "Helvetica Neue", "Arial", "DejaVu Sans"],
+        "font.size": 8.5,
+        "text.color": p["text"],
+        "axes.labelcolor": p["muted"],
+        "axes.edgecolor": p["border"],
+        "axes.linewidth": 0.8,
+        "axes.titlesize": 10.5,
+        "axes.titleweight": "semibold",
+        "axes.titlecolor": p["text"],
+        "xtick.color": p["muted"],
+        "ytick.color": p["muted"],
+        "xtick.labelsize": 8,
+        "ytick.labelsize": 8,
+    })
+
+    def clean(ax, grid_y=True):
+        for side in ("top", "right"):
+            ax.spines[side].set_visible(False)
+        ax.tick_params(length=0, pad=4)
+        if grid_y:
+            ax.grid(axis="y", color="#F0F0F5", linewidth=0.8)
+            ax.set_axisbelow(True)
 
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    ax.plot(ks, inertia, marker="o")
+    ax.plot(ks, inertia, marker="o", color=p["purple_deep"], linewidth=2,
+            markersize=4)
     ax.set(xlabel="Number of clusters (k)", ylabel="WCSS (inertia)",
            title="Elbow method")
-    ax.axvline(best_k, color="grey", ls="--", lw=1)
+    ax.axvline(best_k, color=p["border"], ls="--", lw=1)
+    clean(ax)
     fig.tight_layout()
     fig.savefig(FIGURES / "elbow.png", dpi=140)
     plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    ax.plot(ks, silhouettes, marker="o")
+    ax.plot(ks, silhouettes, marker="o", color=p["purple"], linewidth=2,
+            markersize=4)
     ax.set(xlabel="Number of clusters (k)", ylabel="Silhouette score",
            title="Silhouette by k")
-    ax.axvline(best_k, color="grey", ls="--", lw=1)
+    ax.axvline(best_k, color=p["border"], ls="--", lw=1)
+    clean(ax)
     fig.tight_layout()
     fig.savefig(FIGURES / "silhouette.png", dpi=140)
     plt.close(fig)
 
     pca = PCA(n_components=2, random_state=RANDOM_STATE)
     points = pca.fit_transform(matrix)
+    segment_cmap = LinearSegmentedColormap.from_list(
+        "segments", [p["lavender"], p["purple"], p["purple_deep"]]
+    )
 
     fig, ax = plt.subplots(figsize=(5.5, 4))
-    ax.scatter(points[:, 0], points[:, 1], c=kmeans.labels_, cmap="tab10",
-               s=7, alpha=0.7)
+    ax.scatter(points[:, 0], points[:, 1], c=kmeans.labels_,
+               cmap=segment_cmap, s=7, alpha=0.75, edgecolors="none")
     ax.set(xlabel="PC 1", ylabel="PC 2",
            title=f"K-Means segments (k={best_k}, PCA view)")
+    clean(ax, grid_y=False)
     fig.tight_layout()
     fig.savefig(FIGURES / "kmeans_pca.png", dpi=140)
     plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(5.5, 4))
-    ax.scatter(points[idx, 0], points[idx, 1], c=hier.labels_, cmap="tab10",
-               s=10, alpha=0.8)
+    ax.scatter(points[idx, 0], points[idx, 1], c=hier.labels_,
+               cmap=segment_cmap, s=10, alpha=0.85, edgecolors="none")
     ax.set(xlabel="PC 1", ylabel="PC 2",
            title=f"Hierarchical segments (Ward, k={best_k}, sample)")
+    clean(ax, grid_y=False)
     fig.tight_layout()
     fig.savefig(FIGURES / "hierarchical_pca.png", dpi=140)
     plt.close(fig)
@@ -141,9 +179,11 @@ def _figures(matrix, kmeans, hier, idx, inertia, silhouettes, best_k):
     sample = idx[:300]
     tree = linkage(matrix[sample], method="ward")
     fig, ax = plt.subplots(figsize=(7, 3.5))
-    dendrogram(tree, truncate_mode="lastp", p=20, no_labels=True, ax=ax)
+    dendrogram(tree, truncate_mode="lastp", p=20, no_labels=True, ax=ax,
+               link_color_func=lambda _: p["purple"], above_threshold_color=p["border"])
     ax.set(title="Dendrogram (Ward, 300-customer sample, truncated)",
            xlabel="Leaves", ylabel="Distance")
+    clean(ax)
     fig.tight_layout()
     fig.savefig(FIGURES / "dendrogram.png", dpi=140)
     plt.close(fig)
