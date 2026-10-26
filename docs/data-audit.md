@@ -75,14 +75,14 @@ and labelled "not used by the model".
 
 ## 5. Corrections to earlier assumptions
 
-- **K = 3 is wrong.** GridSearchCV chose **k = 15** (manhattan, distance-weighted)
-  for Stage 1 and **k = 11** (euclidean) for Stage 2. The K sweep will plot
-  k = 1…15 and report whichever wins.
-- **Test-size comparison** will show test accuracy *and* CV mean ± std, because a
-  0.1 split gives only 92 test rows for Stage 1. The conclusion will be "0.2 kept
-  for a balanced split", not "0.2 scored highest".
-- **The Stage 1 classifier cannot judge a user's own target.** It was trained at
-  the $30.59 benchmark. Arbitrary targets are answered by the empirical CPA
+- **K = 3 is not assumed.** The K sweep (k = 1…15, 5-fold CV) is flat; its
+  highest F1 is k = 1, only ~0.014 above k = 3, which is inside fold noise. The
+  main grid searched 3–15 (1-NN memorises the training set) and chose k = 3.
+- **Test-size comparison** shows test F1 *and* the note that a 0.1 split leaves
+  only 1,200 test rows. The conclusion is "0.2 kept for a balanced split", not
+  "0.2 scored highest".
+- **The classifier cannot judge a user's own target.** It predicts subscription
+  probability, not CPA. Arbitrary CPA targets are answered by the empirical CPA
   distribution of the nearest historical ads, with the matching sample size
   stated.
 
@@ -96,5 +96,5 @@ and labelled "not used by the model".
 4. Objective switches the panel: CPA/leads (Lead Gen, Sales), CTR/CPC/clicks
    (Traffic), CPM/impressions (Awareness). Reach, frequency and ROAS render an
    explicit "not supported by the training data" panel.
-5. Every prediction is written to SQLite (`data/predictions.db`, stdlib) with the
+5. Every prediction is written to SQLite (`data/history.db`, stdlib) with the
    full input snapshot, result and model name.

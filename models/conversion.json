@@ -1,0 +1,530 @@
+{
+  "stage": "Lead conversion",
+  "created": "2026-10-27T01:26:38",
+  "dataset": {
+    "name": "UCI Bank Marketing (bank-full.csv)",
+    "source": "https://archive.ics.uci.edu/dataset/222/bank+marketing",
+    "file": "/Users/meetagrawal/Documents/CRM-Adv/data/raw/bank-full.csv",
+    "rows": 45211,
+    "columns_available": 17,
+    "features_used": 16,
+    "target": "y (yes = subscribed a term deposit)",
+    "positive_rate": 0.117,
+    "excluded": [
+      "duration (known only after the call -> leakage)",
+      "y"
+    ],
+    "duplicate_rows": 0,
+    "derived": "previously_contacted = pdays != -1; pdays -1 -> missing",
+    "missing_note": "the file has no blanks; 'unknown' is kept as a real category, and the pdays sentinel is the only NaN"
+  },
+  "target": "y = subscribed a term deposit",
+  "features": [
+    {
+      "name": "age",
+      "kind": "numeric",
+      "min": 18.0,
+      "max": 95.0
+    },
+    {
+      "name": "balance",
+      "kind": "numeric",
+      "min": -8019.0,
+      "max": 102127.0
+    },
+    {
+      "name": "day",
+      "kind": "numeric",
+      "min": 1.0,
+      "max": 31.0
+    },
+    {
+      "name": "campaign",
+      "kind": "numeric",
+      "min": 1.0,
+      "max": 63.0
+    },
+    {
+      "name": "pdays",
+      "kind": "numeric",
+      "min": 1.0,
+      "max": 871.0
+    },
+    {
+      "name": "previous",
+      "kind": "numeric",
+      "min": 0.0,
+      "max": 275.0
+    },
+    {
+      "name": "previously_contacted",
+      "kind": "numeric",
+      "min": 0.0,
+      "max": 1.0
+    },
+    {
+      "name": "job",
+      "kind": "categorical",
+      "categories": [
+        "admin.",
+        "blue-collar",
+        "entrepreneur",
+        "housemaid",
+        "management",
+        "retired",
+        "self-employed",
+        "services",
+        "student",
+        "technician",
+        "unemployed",
+        "unknown"
+      ]
+    },
+    {
+      "name": "marital",
+      "kind": "categorical",
+      "categories": [
+        "divorced",
+        "married",
+        "single"
+      ]
+    },
+    {
+      "name": "education",
+      "kind": "categorical",
+      "categories": [
+        "primary",
+        "secondary",
+        "tertiary",
+        "unknown"
+      ]
+    },
+    {
+      "name": "default",
+      "kind": "categorical",
+      "categories": [
+        "no",
+        "yes"
+      ]
+    },
+    {
+      "name": "housing",
+      "kind": "categorical",
+      "categories": [
+        "no",
+        "yes"
+      ]
+    },
+    {
+      "name": "loan",
+      "kind": "categorical",
+      "categories": [
+        "no",
+        "yes"
+      ]
+    },
+    {
+      "name": "contact",
+      "kind": "categorical",
+      "categories": [
+        "cellular",
+        "telephone",
+        "unknown"
+      ]
+    },
+    {
+      "name": "month",
+      "kind": "categorical",
+      "categories": [
+        "apr",
+        "aug",
+        "dec",
+        "feb",
+        "jan",
+        "jul",
+        "jun",
+        "mar",
+        "may",
+        "nov",
+        "oct",
+        "sep"
+      ]
+    },
+    {
+      "name": "poutcome",
+      "kind": "categorical",
+      "categories": [
+        "failure",
+        "other",
+        "success",
+        "unknown"
+      ]
+    }
+  ],
+  "features_excluded": [
+    "duration (known only after the call -> leakage)",
+    "y"
+  ],
+  "test_size": 0.2,
+  "train_rows": 9600,
+  "test_rows": 2400,
+  "positive_rate": 0.117,
+  "best_model": "RBFSVM",
+  "selection_rule": "highest test positive-class F1; recall breaks ties",
+  "majority_baseline": 0.8829,
+  "models": [
+    {
+      "algorithm": "KNN",
+      "accuracy": 0.8692,
+      "precision": 0.383,
+      "recall": 0.1922,
+      "f1": 0.2559,
+      "macro_f1": 0.5921,
+      "balanced_accuracy": 0.5756,
+      "majority_baseline": 0.8829,
+      "roc_auc": 0.6564,
+      "probability_supported": true,
+      "cv_score": 0.2837,
+      "best_params": {
+        "metric": "euclidean",
+        "n_neighbors": 3,
+        "weights": "uniform"
+      },
+      "grid_top": [
+        {
+          "params": {
+            "metric": "euclidean",
+            "n_neighbors": 3,
+            "weights": "uniform"
+          },
+          "cv_score": 0.2837,
+          "cv_std": 0.0357
+        },
+        {
+          "params": {
+            "metric": "euclidean",
+            "n_neighbors": 3,
+            "weights": "distance"
+          },
+          "cv_score": 0.2826,
+          "cv_std": 0.0305
+        },
+        {
+          "params": {
+            "metric": "manhattan",
+            "n_neighbors": 3,
+            "weights": "uniform"
+          },
+          "cv_score": 0.2794,
+          "cv_std": 0.0488
+        },
+        {
+          "params": {
+            "metric": "manhattan",
+            "n_neighbors": 5,
+            "weights": "distance"
+          },
+          "cv_score": 0.2785,
+          "cv_std": 0.0303
+        },
+        {
+          "params": {
+            "metric": "manhattan",
+            "n_neighbors": 5,
+            "weights": "uniform"
+          },
+          "cv_score": 0.2781,
+          "cv_std": 0.0306
+        },
+        {
+          "params": {
+            "metric": "manhattan",
+            "n_neighbors": 3,
+            "weights": "distance"
+          },
+          "cv_score": 0.2753,
+          "cv_std": 0.0431
+        },
+        {
+          "params": {
+            "metric": "manhattan",
+            "n_neighbors": 7,
+            "weights": "uniform"
+          },
+          "cv_score": 0.2701,
+          "cv_std": 0.0227
+        },
+        {
+          "params": {
+            "metric": "manhattan",
+            "n_neighbors": 7,
+            "weights": "distance"
+          },
+          "cv_score": 0.2691,
+          "cv_std": 0.024
+        }
+      ],
+      "confusion_matrix": [
+        [
+          2032,
+          87
+        ],
+        [
+          227,
+          54
+        ]
+      ]
+    },
+    {
+      "algorithm": "GaussianNB",
+      "accuracy": 0.8237,
+      "precision": 0.3301,
+      "recall": 0.4911,
+      "f1": 0.3948,
+      "macro_f1": 0.6459,
+      "balanced_accuracy": 0.6795,
+      "majority_baseline": 0.8829,
+      "roc_auc": 0.725,
+      "probability_supported": true,
+      "cv_score": 0.3823,
+      "best_params": {
+        "var_smoothing": 1e-11
+      },
+      "grid_top": [
+        {
+          "params": {
+            "var_smoothing": 1e-11
+          },
+          "cv_score": 0.3823,
+          "cv_std": 0.0219
+        },
+        {
+          "params": {
+            "var_smoothing": 1e-09
+          },
+          "cv_score": 0.3823,
+          "cv_std": 0.0219
+        },
+        {
+          "params": {
+            "var_smoothing": 1e-07
+          },
+          "cv_score": 0.3823,
+          "cv_std": 0.0219
+        },
+        {
+          "params": {
+            "var_smoothing": 1e-05
+          },
+          "cv_score": 0.3823,
+          "cv_std": 0.0219
+        }
+      ],
+      "confusion_matrix": [
+        [
+          1839,
+          280
+        ],
+        [
+          143,
+          138
+        ]
+      ]
+    },
+    {
+      "algorithm": "LinearSVM",
+      "accuracy": 0.7796,
+      "precision": 0.2825,
+      "recall": 0.573,
+      "f1": 0.3784,
+      "macro_f1": 0.6222,
+      "balanced_accuracy": 0.69,
+      "majority_baseline": 0.8829,
+      "roc_auc": 0.7363,
+      "probability_supported": true,
+      "cv_score": 0.3799,
+      "best_params": {
+        "C": 1,
+        "class_weight": "balanced"
+      },
+      "grid_top": [
+        {
+          "params": {
+            "C": 1,
+            "class_weight": "balanced"
+          },
+          "cv_score": 0.3799,
+          "cv_std": 0.0188
+        },
+        {
+          "params": {
+            "C": 10,
+            "class_weight": "balanced"
+          },
+          "cv_score": 0.3794,
+          "cv_std": 0.0193
+        },
+        {
+          "params": {
+            "C": 0.1,
+            "class_weight": "balanced"
+          },
+          "cv_score": 0.3771,
+          "cv_std": 0.0167
+        },
+        {
+          "params": {
+            "C": 0.01,
+            "class_weight": "balanced"
+          },
+          "cv_score": 0.3711,
+          "cv_std": 0.0144
+        },
+        {
+          "params": {
+            "C": 0.01,
+            "class_weight": null
+          },
+          "cv_score": 0.2887,
+          "cv_std": 0.0355
+        },
+        {
+          "params": {
+            "C": 0.1,
+            "class_weight": null
+          },
+          "cv_score": 0.2887,
+          "cv_std": 0.0355
+        },
+        {
+          "params": {
+            "C": 1,
+            "class_weight": null
+          },
+          "cv_score": 0.2887,
+          "cv_std": 0.0355
+        },
+        {
+          "params": {
+            "C": 10,
+            "class_weight": null
+          },
+          "cv_score": 0.2887,
+          "cv_std": 0.0355
+        }
+      ],
+      "confusion_matrix": [
+        [
+          1710,
+          409
+        ],
+        [
+          120,
+          161
+        ]
+      ]
+    },
+    {
+      "algorithm": "RBFSVM",
+      "accuracy": 0.8021,
+      "precision": 0.321,
+      "recall": 0.6192,
+      "f1": 0.4228,
+      "macro_f1": 0.6517,
+      "balanced_accuracy": 0.7228,
+      "majority_baseline": 0.8829,
+      "roc_auc": 0.7672,
+      "probability_supported": true,
+      "cv_score": 0.4236,
+      "best_params": {
+        "C": 10,
+        "class_weight": "balanced",
+        "gamma": 0.01
+      },
+      "grid_top": [
+        {
+          "params": {
+            "C": 10,
+            "class_weight": "balanced",
+            "gamma": 0.01
+          },
+          "cv_score": 0.4236,
+          "cv_std": 0.0163
+        },
+        {
+          "params": {
+            "C": 1,
+            "class_weight": "balanced",
+            "gamma": "scale"
+          },
+          "cv_score": 0.4186,
+          "cv_std": 0.0099
+        },
+        {
+          "params": {
+            "C": 1,
+            "class_weight": "balanced",
+            "gamma": 0.01
+          },
+          "cv_score": 0.4095,
+          "cv_std": 0.0169
+        },
+        {
+          "params": {
+            "C": 0.1,
+            "class_weight": "balanced",
+            "gamma": "scale"
+          },
+          "cv_score": 0.3867,
+          "cv_std": 0.0233
+        },
+        {
+          "params": {
+            "C": 10,
+            "class_weight": "balanced",
+            "gamma": "scale"
+          },
+          "cv_score": 0.3575,
+          "cv_std": 0.0235
+        },
+        {
+          "params": {
+            "C": 0.1,
+            "class_weight": "balanced",
+            "gamma": 0.01
+          },
+          "cv_score": 0.3441,
+          "cv_std": 0.0158
+        },
+        {
+          "params": {
+            "C": 10,
+            "class_weight": null,
+            "gamma": "scale"
+          },
+          "cv_score": 0.329,
+          "cv_std": 0.0331
+        },
+        {
+          "params": {
+            "C": 10,
+            "class_weight": null,
+            "gamma": 0.01
+          },
+          "cv_score": 0.2904,
+          "cv_std": 0.0366
+        }
+      ],
+      "confusion_matrix": [
+        [
+          1751,
+          368
+        ],
+        [
+          107,
+          174
+        ]
+      ]
+    }
+  ]
+}

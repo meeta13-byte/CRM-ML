@@ -1,149 +1,174 @@
 {
   "dataset": {
-    "source": "kaggle: amritachatterjee09/lead-scoring-dataset (X Education)",
-    "file": "/Users/meetagrawal/Documents/CRM-Adv/data/raw/Lead Scoring.csv",
-    "rows": 9240,
-    "duplicates_removed": 0,
-    "positive_rate": 0.3854,
-    "dropped_columns": [
-      "Prospect ID",
-      "Lead Number",
-      "Tags",
-      "Lead Quality",
-      "Lead Profile",
-      "Last Notable Activity",
-      "Last Activity",
-      "Asymmetrique Activity Index",
-      "Asymmetrique Profile Index",
-      "Asymmetrique Activity Score",
-      "Asymmetrique Profile Score"
+    "name": "UCI Bank Marketing (bank-full.csv)",
+    "source": "https://archive.ics.uci.edu/dataset/222/bank+marketing",
+    "file": "/Users/meetagrawal/Documents/CRM-Adv/data/raw/bank-full.csv",
+    "rows": 45211,
+    "columns_available": 17,
+    "features_used": 16,
+    "target": "y (yes = subscribed a term deposit)",
+    "positive_rate": 0.117,
+    "excluded": [
+      "duration (known only after the call -> leakage)",
+      "y"
     ],
-    "include_snapshot_fields": false
+    "duplicate_rows": 0,
+    "derived": "previously_contacted = pdays != -1; pdays -1 -> missing",
+    "missing_note": "the file has no blanks; 'unknown' is kept as a real category, and the pdays sentinel is the only NaN"
   },
-  "rows": 9240,
+  "rows": 45211,
+  "features_used": [
+    "age",
+    "balance",
+    "pdays",
+    "previous",
+    "previously_contacted",
+    "job",
+    "marital",
+    "education",
+    "default",
+    "housing",
+    "loan",
+    "poutcome"
+  ],
+  "features_excluded": [
+    "day",
+    "month",
+    "contact",
+    "campaign",
+    "duration",
+    "y"
+  ],
   "k": 3,
-  "silhouette": 0.225,
-  "silhouette_best": 0.2468,
-  "k_best_silhouette": 10,
-  "ari_kmeans_vs_hierarchical": 0.554,
+  "silhouette": 0.3777,
+  "silhouette_best": 0.3777,
+  "k_choice": "highest silhouette score",
+  "ari_kmeans_vs_hierarchical": 0.965,
+  "base_conversion_rate": 0.117,
   "elbow": [
     {
       "k": 2,
-      "inertia": 48051.31
+      "inertia": 297571.04
     },
     {
       "k": 3,
-      "inertia": 42672.01
+      "inertia": 266039.61
     },
     {
       "k": 4,
-      "inertia": 39494.5
+      "inertia": 237643.77
     },
     {
       "k": 5,
-      "inertia": 36271.79
+      "inertia": 217151.37
     },
     {
       "k": 6,
-      "inertia": 33792.09
+      "inertia": 203233.34
     },
     {
       "k": 7,
-      "inertia": 31747.97
+      "inertia": 192116.35
     },
     {
       "k": 8,
-      "inertia": 30304.52
+      "inertia": 184312.01
     },
     {
       "k": 9,
-      "inertia": 28532.82
+      "inertia": 175220.07
     },
     {
       "k": 10,
-      "inertia": 27559.19
+      "inertia": 169831.42
     }
   ],
   "silhouette_by_k": [
     {
       "k": 2,
-      "score": 0.2176
+      "score": 0.3753
     },
     {
       "k": 3,
-      "score": 0.225
+      "score": 0.3777
     },
     {
       "k": 4,
-      "score": 0.218
+      "score": 0.1682
     },
     {
       "k": 5,
-      "score": 0.2218
+      "score": 0.1715
     },
     {
       "k": 6,
-      "score": 0.2054
+      "score": 0.1715
     },
     {
       "k": 7,
-      "score": 0.2077
+      "score": 0.1488
     },
     {
       "k": 8,
-      "score": 0.2206
+      "score": 0.1425
     },
     {
       "k": 9,
-      "score": 0.2415
+      "score": 0.1513
     },
     {
       "k": 10,
-      "score": 0.2468
+      "score": 0.146
     }
   ],
   "profiles": [
     {
       "cluster": 3,
-      "leads": 2590,
-      "share": 0.28,
-      "conversion_rate": 0.698,
+      "customers": 4632,
+      "share": 0.102,
+      "conversion_rate": 0.307,
       "tier": "hot",
-      "mean TotalVisits": 4.66,
-      "mean Total Time Spent on Website": 1279.5,
-      "mean Page Views Per Visit": 3.13,
-      "Lead Origin": "Landing Page Submission",
-      "Lead Source": "Google",
-      "A free copy of Mastering The Interview": "No",
-      "Specialization": "Finance Management"
+      "mean age": 42.35,
+      "mean balance": 2001.99,
+      "mean pdays": 138.89,
+      "mean previous": 3.36,
+      "mean previously_contacted": 1.0,
+      "poutcome": "failure",
+      "housing": "no",
+      "education": "secondary",
+      "job": "management"
     },
     {
       "cluster": 2,
-      "leads": 3253,
-      "share": 0.352,
-      "conversion_rate": 0.339,
+      "customers": 3627,
+      "share": 0.08,
+      "conversion_rate": 0.133,
       "tier": "warm",
-      "mean TotalVisits": 0.84,
-      "mean Total Time Spent on Website": 82.93,
-      "mean Page Views Per Visit": 0.59,
-      "Lead Origin": "API",
-      "Lead Source": "Olark Chat",
-      "A free copy of Mastering The Interview": "No",
-      "Specialization": "Marketing Management"
+      "mean age": 39.18,
+      "mean balance": 1042.87,
+      "mean pdays": 333.96,
+      "mean previous": 2.94,
+      "mean previously_contacted": 1.0,
+      "poutcome": "failure",
+      "housing": "yes",
+      "education": "secondary",
+      "job": "blue-collar"
     },
     {
       "cluster": 1,
-      "leads": 3397,
-      "share": 0.368,
-      "conversion_rate": 0.192,
+      "customers": 36952,
+      "share": 0.817,
+      "conversion_rate": 0.092,
       "tier": "cold",
-      "mean TotalVisits": 5.01,
-      "mean Total Time Spent on Website": 271.61,
-      "mean Page Views Per Visit": 3.47,
-      "Lead Origin": "Landing Page Submission",
-      "Lead Source": "Direct Traffic",
-      "A free copy of Mastering The Interview": "Yes",
-      "Specialization": "Finance Management"
+      "mean age": 40.93,
+      "mean balance": 1313.43,
+      "mean pdays": NaN,
+      "mean previous": 0.0,
+      "mean previously_contacted": 0.0,
+      "poutcome": "unknown",
+      "housing": "yes",
+      "education": "secondary",
+      "job": "blue-collar"
     }
   ],
   "figures": [

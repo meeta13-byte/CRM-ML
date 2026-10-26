@@ -1,31 +1,38 @@
-"""Lead segmentation: elbow -> K-Means vs Ward hierarchical.
+"""Customer segmentation: K-Means vs Ward, with the eye and the number agreeing.
 
-The target is never used to form clusters; it is only used afterwards to
-describe them (conversion rate per segment).
+Uses only customer profile and relationship-history fields. The contact-timing
+fields (day, month, contact, campaign) are dropped because they describe the
+last campaign operation, not the customer, and `duration`/`y` are excluded
+because they are post-outcome. The target is never used to form clusters; it is
+only used afterwards to describe them.
+
+    python3 -m src.clustering
 """
-import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.cluster.hierarchy import dendrogram, linkage
 from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import adjusted_rand_score, silhouette_score
 
 from .config import FIGURES, MODELS, RANDOM_STATE
-from .data.loaders import load_stage2
-from .data.preprocess import build_preprocessor, column_types
+from .data.loaders import load_bank
+from .data.preprocess import build_preprocessor
 from .evaluate import save_json
 
 K_RANGE = range(2, 11)
-SILHOUETTE_TOLERANCE = 0.90
+# Campaign-operation fields: not part of the customer portrait.
+SEGMENT_EXCLUDE = ["day", "month", "contact", "campaign"]
 
 
 def main():
-    X, y, info = load_stage2()
-    X = X.reset_index(drop=True)
+    X, y, info = load_bank()
+    X = X.drop(columns=SEGMENT_EXCLUDE).reset_index(drop=True)
     y = y.reset_index(drop=True)
-    numeric, categorical = column_types(X)
+    numeric = X.select_dtypes(include=np.number).columns.tolist()
+    categorical = [c for c in X.columns if c not in numeric]
 
     matrix = np.asarray(
         build_preprocessor(numeric, categorical).fit_transform(X), dtype=float
@@ -39,12 +46,10 @@ def main():
             matrix, km.labels_, sample_size=min(3000, len(matrix)),
             random_state=RANDOM_STATE)))
 
-    # Silhouette creeps up with k, so the raw maximum landed on the edge of the
-    # range. Parsimony rule: smallest k within 10% of the best silhouette —
-    # the extra segments then have to earn their keep.
+    # Highest silhouette wins. The curve is flat between k=2 and k=3, and
+    # both are weak (0.38), so the report should call the segments coarse
+    # portraits rather than well-separated groups.
     best_k = int(list(K_RANGE)[int(np.argmax(silhouettes))])
-    threshold = SILHOUETTE_TOLERANCE * max(silhouettes)
-    best_k = next(k for k, s in zip(K_RANGE, silhouettes) if s >= threshold)
     kmeans = KMeans(n_clusters=best_k, n_init=10, random_state=RANDOM_STATE).fit(matrix)
 
     # Ward's distance matrix is O(n^2): fit hierarchical on a sample.
@@ -55,17 +60,22 @@ def main():
 
     _figures(matrix, kmeans, hier, idx, inertia, silhouettes, best_k)
 
-    profiles = _profiles(X, y, kmeans.labels_, numeric, categorical)
+    base_rate = float(y.mean())
+    profiles = _profiles(X, y, kmeans.labels_, numeric, categorical, base_rate)
     payload = {
         "dataset": info,
         "rows": int(len(matrix)),
+        "features_used": X.columns.tolist(),
+        "features_excluded": SEGMENT_EXCLUDE + ["duration", "y"],
         "k": best_k,
         "silhouette": round(float(silhouettes[best_k - K_RANGE[0]]), 4),
         "silhouette_best": round(float(max(silhouettes)), 4),
-        "k_best_silhouette": int(list(K_RANGE)[int(np.argmax(silhouettes))]),
+        "k_choice": "highest silhouette score",
         "ari_kmeans_vs_hierarchical": round(ari, 4),
+        "base_conversion_rate": round(base_rate, 4),
         "elbow": [{"k": k, "inertia": round(v, 2)} for k, v in zip(K_RANGE, inertia)],
-        "silhouette_by_k": [{"k": k, "score": round(v, 4)} for k, v in zip(K_RANGE, silhouettes)],
+        "silhouette_by_k": [{"k": k, "score": round(v, 4)}
+                            for k, v in zip(K_RANGE, silhouettes)],
         "profiles": profiles,
         "figures": [
             "reports/figures/elbow.png",
@@ -79,11 +89,10 @@ def main():
 
     print(f"k = {best_k} | silhouette = {silhouettes[best_k - K_RANGE[0]]:.3f} | "
           f"ARI(K-Means, Ward) = {ari:.3f} | "
-          f"best silhouette was {max(silhouettes):.3f} at k="
-          f"{list(K_RANGE)[int(np.argmax(silhouettes))]}")
+          f"max silhouette {max(silhouettes):.3f}")
     for row in profiles:
-        print(f"  segment {row['cluster']}: {row['leads']} leads, "
-              f"{row['conversion_rate']:.1%} converted")
+        print(f"  segment {row['cluster']}: {row['customers']} customers, "
+              f"{row['conversion_rate']:.1%} subscribed ({row['tier']})")
 
 
 def _figures(matrix, kmeans, hier, idx, inertia, silhouettes, best_k):
@@ -133,26 +142,28 @@ def _figures(matrix, kmeans, hier, idx, inertia, silhouettes, best_k):
     tree = linkage(matrix[sample], method="ward")
     fig, ax = plt.subplots(figsize=(7, 3.5))
     dendrogram(tree, truncate_mode="lastp", p=20, no_labels=True, ax=ax)
-    ax.set(title="Dendrogram (Ward, 300-lead sample, truncated)",
+    ax.set(title="Dendrogram (Ward, 300-customer sample, truncated)",
            xlabel="Leaves", ylabel="Distance")
     fig.tight_layout()
     fig.savefig(FIGURES / "dendrogram.png", dpi=140)
     plt.close(fig)
 
 
-def _profiles(X, y, labels, numeric, categorical):
+def _profiles(X, y, labels, numeric, categorical, base_rate):
     rows = []
     profile_cols = _defining_columns(X, labels, categorical)
     for cluster in range(labels.max() + 1):
         mask = labels == cluster
         row = {
             "cluster": int(cluster + 1),
-            "leads": int(mask.sum()),
+            "customers": int(mask.sum()),
             "share": round(float(mask.mean()), 3),
             "conversion_rate": round(float(y[mask].mean()), 3),
         }
-        row["tier"] = ("hot" if row["conversion_rate"] >= 0.5
-                       else "warm" if row["conversion_rate"] >= 0.3 else "cold")
+        # Tiers relative to the cohort rate, so they work for any dataset.
+        row["tier"] = ("hot" if row["conversion_rate"] >= 2 * base_rate
+                       else "warm" if row["conversion_rate"] >= base_rate
+                       else "cold")
         for col in numeric:
             row[f"mean {col}"] = round(float(X.loc[mask, col].mean()), 2)
         for col in profile_cols:
@@ -165,9 +176,8 @@ def _profiles(X, y, labels, numeric, categorical):
 def _defining_columns(X, labels, categorical, top=4):
     """Categorical fields whose mix differs most between segments.
 
-    Showing the overall mode (e.g. 'India' in every segment) tells nobody
-    anything, so rank by the largest gap between a segment's share and the
-    overall share.
+    Showing the overall mode in every segment tells nobody anything, so rank by
+    the largest gap between a segment's share and the overall share.
     """
     scored = []
     for col in categorical:

@@ -1,31 +1,18 @@
 """Column contracts and the leakage guard.
 
-Every model is scored at a fixed moment in time. The forbidden sets below are
-columns that only exist after that moment, so training calls
+The conversion model is scored before the call, so any column that only exists
+after the call must never reach the feature matrix. Training calls
 assert_no_leakage() and fails loudly instead of quietly inflating accuracy.
 """
 import pandas as pd
 
-# Known only after the campaign has run.
-STAGE1_FORBIDDEN = {
-    "ad_id", "impressions", "clicks", "spent", "total_conversion",
-    "approved_conversion", "cpa", "ctr", "cpc", "cpm", "reach",
-    "frequency", "actions", "results", "cost_per_result",
-    "effective_status", "updated_time", "conversions",
-}
-
-# Meta account sync: same idea, plus fields edited after launch.
-META_FORBIDDEN = STAGE1_FORBIDDEN | {"name", "adset_id", "campaign_id"}
-
-# Written by the sales team after the lead was contacted.
-STAGE2_FORBIDDEN = {
-    "prospect id", "lead number", "tags", "lead quality",
-    "last notable activity", "converted",
-}
+# `duration` is the call length; it is known only after the call and separates
+# subscribers from non-subscribers extremely well (mean 537s vs 221s).
+BANK_FORBIDDEN = {"y", "duration", "target", "converted"}
 
 
 def assert_no_leakage(features, forbidden, stage):
-    bad = sorted({f.strip().lower() for f in features} & forbidden)
+    bad = sorted({str(f).strip().lower() for f in features} & forbidden)
     if bad:
         raise ValueError(
             f"{stage}: post-outcome columns reached the feature matrix: {bad}. "

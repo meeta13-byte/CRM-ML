@@ -5,33 +5,33 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_RAW = ROOT / "data" / "raw"
 MODELS = ROOT / "models"
 FIGURES = ROOT / "reports" / "figures"
+HISTORY_DB = ROOT / "data" / "history.db"
 
 RANDOM_STATE = 42
 TEST_SIZE = 0.2
 CV_FOLDS = 5
+TEST_SIZES = (0.3, 0.2, 0.1)
 
-# SVC is O(n^2) and probability=True adds an internal CV, so Stage 1 is capped.
-MAX_STAGE1_ROWS = 12_000
+# RBF SVC is roughly O(n^2) and the bank data has 45,211 rows. One stratified
+# sample is drawn once, so all four algorithms (and every experiment) see
+# exactly the same rows. Raise it if you have an hour to spare.
+MAX_BANK_ROWS = 12_000
 
-# Stage 1 label: "did this campaign beat its target cost per acquisition?"
-# The threshold is the median CPA of the same cohort (business KPI in a real
-# account). Every run reports it, and the report includes a sensitivity band.
-# Spend values in the public export are mostly small; $1 keeps 80% of the ads
-# while still dropping placeholder rows with zero delivery.
+# 11.7% positives. Selection uses positive-class F1: "always predict no" scores
+# F1 = 0, so it cannot game the metric (macro-F1 would reward the majority
+# class). Macro-F1, precision, recall and the confusion matrix are still shown.
+SELECTION_METRIC = "f1"
+
+# Predicted probability -> priority band (lead-conversion page). High is about
+# 2.5x the 11.7% cohort subscription rate, so the bands describe relative risk,
+# not a claim that the customer will subscribe.
+BANDS = {"High": 0.30, "Medium": 0.10}
+
+# Campaign module: rows below this spend are placeholder ads with no delivery.
 MIN_SPEND = 1.0
-TARGET_CPA_QUANTILE = 0.50
-TARGET_CPA_OVERRIDE = None  # e.g. 250.0 once you have a real account KPI
+# Nearest-neighbour benchmark size for campaign planning.
+NEIGHBOURS = 25
 
-# Imbalanced classes: select on macro-F1 so "predict the majority class"
-# cannot win. Per-class F1/precision/recall are still reported.
-SELECTION_METRIC = "f1_macro"
+BANK_CSV = DATA_RAW / "bank-full.csv"
+CAMPAIGN_CSV = DATA_RAW / "KAG_conversion_data.csv"
 
-# Predicted probability -> priority band (both stages).
-BANDS = {"High": 0.65, "Medium": 0.40}
-
-# Default locations; the loaders also search data/raw for a matching CSV.
-STAGE1_KAGGLE = DATA_RAW / "KAG_conversion_data.csv"
-STAGE2_XEDUCATION = DATA_RAW / "Lead Scoring.csv"
-STAGE1_META = DATA_RAW / "stage1_meta.csv"
-
-META_API_VERSION = "v26.0"

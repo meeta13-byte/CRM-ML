@@ -1,6 +1,10 @@
-"""Fast self-check with tiny fixtures (not the real datasets).
+"""Fast self-check with a tiny synthetic bank-shaped fixture.
 
-    python tests/smoke.py
+    python3 tests/smoke.py
+
+The fixture exists only to test the code path; the app always trains on the
+real UCI file. Covers the loader contract, the leakage guard, preprocessing,
+one nearest-neighbour fit, the campaign benchmark and the SQLite history.
 """
 import sys
 import tempfile
@@ -8,99 +12,123 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.naive_bayes import GaussianNB
-from sklearn.neighbors import KNeighborsClassifier
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.data.loaders import load_stage1_kaggle, load_stage2
-from src.data.preprocess import build_pipeline, column_types, split_data
-from src.data.schema import STAGE1_FORBIDDEN, STAGE2_FORBIDDEN, assert_no_leakage
+from src.campaign import forecast  # noqa: E402
+from src.data.loaders import load_bank  # noqa: E402
+from src.data.preprocess import build_pipeline, column_types, split_data  # noqa: E402
+from src.data.schema import BANK_FORBIDDEN, assert_no_leakage  # noqa: E402
+from src.history import (  # noqa: E402
+    get_campaign, get_prediction, list_campaigns, list_predictions,
+    save_campaign, save_prediction, set_actual,
+)
+from sklearn.neighbors import KNeighborsClassifier  # noqa: E402
 
 
-def _stage1_fixture(path):
-    rng = np.random.default_rng(0)
-    n = 90
+def bank_fixture(path):
+    """45 rows in the official bank-full.csv layout (semicolon separated)."""
+    rng = np.random.default_rng(7)
+    n = 45
     pd.DataFrame({
-        "ad_id": np.repeat(np.arange(9), 10),
-        "xyz_campaign_id": np.tile([1, 2, 3], 30),
-        "fb_campaign_id": np.repeat(np.arange(18), 5),
-        "age": np.tile(["30-34", "35-39", "40-44"], 30),
-        "gender": np.tile(["M", "F"], 45),
-        "interest": np.tile([15, 16, 18], 30),
-        "Impressions": rng.integers(1000, 90000, n),
-        "Clicks": rng.integers(0, 200, n),
-        "Spent": rng.uniform(20, 400, n).round(2),
-        "Total_Conversion": rng.integers(0, 10, n),
-        "Approved_Conversion": rng.integers(0, 6, n),
-    }).to_csv(path, index=False)
+        "age": rng.integers(18, 80, n),
+        "job": rng.choice(["admin.", "blue-collar", "management"], n),
+        "marital": rng.choice(["married", "single"], n),
+        "education": rng.choice(["primary", "secondary", "tertiary"], n),
+        "default": "no",
+        "balance": rng.integers(-500, 50000, n),
+        "housing": rng.choice(["yes", "no"], n),
+        "loan": "no",
+        "contact": rng.choice(["cellular", "unknown"], n),
+        "day": rng.integers(1, 32, n),
+        "month": rng.choice(["may", "jun", "nov"], n),
+        "duration": rng.integers(10, 900, n),
+        "campaign": rng.integers(1, 6, n),
+        "pdays": rng.choice([-1, 30, 200], n),
+        "previous": rng.integers(0, 4, n),
+        "poutcome": rng.choice(["unknown", "failure", "success"], n),
+        "y": ["yes", "no"] * 22 + ["no"],
+    }).to_csv(path, index=False, sep=";")
 
 
-def _stage2_fixture(path):
-    rng = np.random.default_rng(1)
-    n = 90
-    pd.DataFrame({
-        "Converted": ["Yes", "No"] * 45,
-        "Lead Origin": ["Landing Page Submission", "API"] * 45,
-        "Lead Source": ["Google", "Direct"] * 45,
-        "TotalVisits": rng.integers(0, 20, n),
-        "Total Time Spent on Website": rng.integers(0, 2000, n),
-        "Page Views Per Visit": rng.uniform(0, 4, n).round(2),
-        "Occupation": ["Working Professional", "Student"] * 45,
-        "Tags": ["converted", "lost"] * 45,
-        "Lead Quality": ["High", "Low"] * 45,
-        "Last Notable Activity": ["Email Sent", "SMS Sent"] * 45,
-        "Asymmetrique Activity Index": ["02.Medium", "01.Low"] * 45,
-        "Last Activity": ["SMS Sent", "Email Opened"] * 45,
-    }).to_csv(path, index=False)
+def campaign_fixture():
+    """Small ad-level frame with the derived columns forecast() expects."""
+    n = 60
+    df = pd.DataFrame({
+        "age": np.tile(["30-34", "35-39"], 30),
+        "gender": np.tile(["M", "F"], 30),
+        "interest": np.tile(["15", "16", "18"], 20),
+        "campaign": np.tile(["916", "936"], 30),
+        "conversions": np.tile([2.0, 0.0, 1.0], 20),
+        "conversion_rate": np.tile([0.10, 0.0, 0.05], 20),
+        "cpc": 1.5,
+        "ctr": 0.02,
+        "cpm": 0.3,
+        "spent": 100.0,
+        "impressions": 10000.0,
+        "clicks": 200.0,
+    })
+    df["cpa"] = np.where(df["conversions"] > 0, 30.0 / df["conversions"], np.inf)
+    df["conversions_per_dollar"] = df["conversions"] / 100.0
+    return df
 
 
 def main():
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
-        s1, s2 = tmp / "stage1.csv", tmp / "stage2.csv"
-        _stage1_fixture(s1)
-        _stage2_fixture(s2)
+        csv = tmp / "bank-small.csv"
+        bank_fixture(csv)
 
-        X1, y1, info1 = load_stage1_kaggle(s1)
-        assert set(y1.unique()) == {0, 1}, "stage 1 needs both classes"
-        assert info1["target_cpa"] > 0
-        assert not set(X1.columns) & {c.lower() for c in STAGE1_FORBIDDEN}
-        numeric, categorical = column_types(X1)
+        X, y, info = load_bank(csv)
+        assert "duration" not in X.columns, "duration must be dropped"
+        assert "y" not in X.columns, "target must not be a feature"
+        assert info["positive_rate"] > 0
+        assert "previously_contacted" in X.columns
+        assert X.loc[X["previously_contacted"] == 0, "pdays"].isna().all()
+
+        # The guard must reject post-outcome columns if a caller adds them back.
+        for leaky in ("duration", "y"):
+            try:
+                assert_no_leakage(list(X.columns) + [leaky], BANK_FORBIDDEN, "test")
+            except ValueError:
+                pass
+            else:
+                raise AssertionError(f"leakage guard did not fire for {leaky}")
+
+        numeric, categorical = column_types(X)
         model = build_pipeline(numeric, categorical, KNeighborsClassifier(n_neighbors=3))
-        Xtr, Xte, ytr, yte = split_data(X1, y1)
-        model.fit(Xtr, ytr)
-        assert model.predict(Xte).shape == (len(Xte),)
-        assert model.predict_proba(Xte).shape == (len(Xte), 2)
+        X_train, X_test, y_train, y_test = split_data(X, y, test_size=0.3)
+        model.fit(X_train, y_train)
+        assert model.predict(X_test).shape == (len(X_test),)
+        assert model.predict_proba(X_test).shape == (len(X_test), 2)
 
-        X2, y2, info2 = load_stage2(s2)
-        for leaky in ["Tags", "Lead Quality", "Last Notable Activity",
-                      "Asymmetrique Activity Index", "Last Activity"]:
-            assert leaky not in X2.columns, f"{leaky} should be dropped"
-        assert "Select" not in X2.astype(str).values
-        numeric, categorical = column_types(X2)
-        model = build_pipeline(numeric, categorical, GaussianNB())
-        Xtr, Xte, ytr, yte = split_data(X2, y2)
-        model.fit(Xtr, ytr)
-        assert model.predict_proba(Xte).shape == (len(Xte), 2)
+        df = campaign_fixture()
+        lead = forecast(df, "30-34", "M", "15", "916", 1000, "Lead Generation",
+                        leads_per_dollar=0.1)
+        assert abs(lead["target_cpa"] - 10.0) < 1e-9, "CPA = 1 / leads per $"
+        assert lead["estimated_leads"] is not None
+        assert lead["neighbours"] == min(25, len(df))
+        traffic = forecast(df, "30-34", "M", "15", "916", 1000, "Traffic")
+        assert traffic["estimated_clicks"] is not None
+        awareness = forecast(df, "30-34", "M", "15", "916", 1000, "Awareness")
+        assert awareness["estimated_impressions"] is not None
+        assert "reach" in awareness["reach_note"].lower()
 
-        try:
-            assert_no_leakage(["spent", "age"], STAGE1_FORBIDDEN, "test")
-        except ValueError:
-            pass
-        else:
-            raise AssertionError("leakage guard did not fire")
+        db = tmp / "history.db"
+        pid = save_prediction("fixture", "KNN", {"age": 40}, 1, probability=0.4,
+                              priority="Medium", path=db)
+        assert list_predictions(path=db).iloc[0]["model"] == "KNN"
+        assert get_prediction(pid, path=db)["features"] == {"age": 40}
+        set_actual(pid, 1, path=db)
+        assert int(get_prediction(pid, path=db)["actual"]) == 1
 
-        assert "converted" in STAGE2_FORBIDDEN
+        rid = save_campaign({"objective": "Awareness"}, {"estimated_cpm": 0.3},
+                            "Awareness", lead["method"], path=db)
+        assert list_campaigns(path=db).iloc[0]["objective"] == "Awareness"
+        assert get_campaign(rid, path=db)["result"]["estimated_cpm"] == 0.3
 
-        # The real Kaggle copy ships the target as 0/1, the docs as Yes/No.
-        raw = pd.read_csv(s2)
-        raw["Converted"] = raw["Converted"].map({"Yes": 1, "No": 0})
-        raw.to_csv(s2, index=False)
-        _, y2_numeric, _ = load_stage2(s2)
-        assert y2_numeric.sum() == y2.sum(), "0/1 target parsed differently to Yes/No"
-
-    print("smoke ok: adapters, leakage guard, preprocessing, KNN, GaussianNB")
+    print("smoke ok: bank loader, leakage guard, preprocessing, KNN, campaign "
+          "benchmark, SQLite history")
 
 
 if __name__ == "__main__":

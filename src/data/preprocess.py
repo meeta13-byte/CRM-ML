@@ -9,14 +9,15 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from ..config import RANDOM_STATE, TEST_SIZE
 
 
-def split_data(X, y, max_rows=None):
+def split_data(X, y, max_rows=None, test_size=None):
     """Stratified hold-out. Scaling is fitted inside the pipeline, never here."""
     if max_rows and len(X) > max_rows:
         X, _, y, _ = train_test_split(
             X, y, train_size=max_rows, stratify=y, random_state=RANDOM_STATE
         )
     return train_test_split(
-        X, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_STATE
+        X, y, test_size=test_size or TEST_SIZE, stratify=y,
+        random_state=RANDOM_STATE,
     )
 
 
