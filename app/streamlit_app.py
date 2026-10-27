@@ -23,11 +23,12 @@ from src.campaign import (  # noqa: E402
     OBJECTIVES, coverage_rows, default_target, forecast, overview,
 )
 from src.config import BANDS, FIGURES, HISTORY_DB, MODELS  # noqa: E402
-from src.data.loaders import load_campaign_ads  # noqa: E402
+from src.data.loaders import load_bank, load_campaign_ads  # noqa: E402
 from src.history import (  # noqa: E402
     get_campaign, get_prediction, list_campaigns, list_predictions,
     save_campaign, save_prediction, set_actual,
 )
+from src.outliers import describe_flags, iqr_table, series_for  # noqa: E402
 from src.predict import load_meta, score, score_all  # noqa: E402
 
 st.set_page_config(
@@ -110,6 +111,25 @@ def _pretty(name):
 @st.cache_data(show_spinner=False)
 def campaign_data():
     return load_campaign_ads()
+
+
+@st.cache_data(show_spinner=False)
+def bank_frame():
+    return load_bank()[0]
+
+
+BANK_OUTLIER_COLUMNS = ["age", "balance", "day", "campaign", "pdays",
+                        "previous"]
+CAMPAIGN_OUTLIER_COLUMNS = ["impressions", "clicks", "spent",
+                            "total_conversion", "approved_conversion"]
+OUTLIER_LABELS = {
+    "age": "Age", "balance": "Yearly balance (€)", "day": "Day of month",
+    "campaign": "Contacts this campaign", "pdays": "Days since last contact",
+    "previous": "Earlier contacts", "impressions": "Impressions",
+    "clicks": "Clicks", "spent": "Spent ($)",
+    "total_conversion": "Total conversions",
+    "approved_conversion": "Approved conversions",
+}
 
 
 @st.cache_data(show_spinner=False)
@@ -239,7 +259,7 @@ def page_dashboard():
                     },
                     colors=[ui.C["purple_deep"], ui.C["orange"],
                             ui.C["blue"], ui.C["lavender"]],
-                    width=6.4, height=3.0,
+                    width=7.2, height=3.2,
                 )
                 ui.show(fig)
                 ui.note(
@@ -253,7 +273,7 @@ def page_dashboard():
                          "Run <code>python3 -m src.train_conversion</code>.")
 
     with right:
-        with st.container(border=True):
+        with st.container(border=True, key="donut_dashboard"):
             ui.section("Actual class distribution",
                        "UCI Bank Marketing · target y")
             if CONVERSION:
@@ -261,7 +281,7 @@ def page_dashboard():
                 ui.show(ui.donut(
                     ["No", "Yes"], [1 - pos, pos],
                     [ui.C["lavender"], ui.C["purple_deep"]],
-                    _pct(pos), "subscribed", width=3.2, height=2.7,
+                    _pct(pos), "subscribed", width=4.6, height=2.9,
                 ))
                 ui.stat_rows([
                     ("Subscribed (yes)", f"{round(pos * BANK['rows']):,}"),
@@ -295,7 +315,7 @@ def page_dashboard():
                     [f"Campaign {c}" for c in by_campaign["campaign"]],
                     by_campaign["conversions"].astype(float).tolist(),
                     color=[ui.C["purple_deep"], ui.C["lavender"], ui.C["blue"]],
-                    width=6.2, height=2.25, fmt="{:,.0f}",
+                    width=7.0, height=2.3, fmt="{:,.0f}",
                 ))
                 ui.note("Conversions are summed per campaign. One row in this "
                         "dataset is one ad, not a campaign.")
@@ -416,7 +436,7 @@ def page_campaign():
                 [f"Campaign {c}" for c in ov["by_campaign"]["campaign"]],
                 ov["by_campaign"]["spend"].astype(float).tolist(),
                 color=[ui.C["purple_deep"], ui.C["lavender"], ui.C["blue"]],
-                width=5.4, height=2.2, fmt="${:,.0f}",
+                width=5.8, height=2.5, fmt="${:,.0f}",
             ))
         with chart_right:
             ui.section("CTR by age bracket")
@@ -424,7 +444,7 @@ def page_campaign():
                 ov["by_age"]["age"].astype(str).tolist(),
                 (ov["by_age"]["ctr"].astype(float) * 100).tolist(),
                 color=ui.C["purple"],
-                width=5.4, height=2.2, fmt="{:.3f}%",
+                width=5.8, height=2.5, fmt="{:.3f}%",
             ))
         with st.expander("Campaign comparison table"):
             st.dataframe(ov["by_campaign"], hide_index=True, width="stretch")
@@ -868,50 +888,48 @@ def page_models():
                "chart", "orange")
 
     st.write("")
-    left, right = st.columns([1.22, 1], gap="large")
-    with left:
-        with st.container(border=True):
-            ui.section("Comparison table", f"Ranked by {metric_labels[metric]}")
-            table = pd.DataFrame(MODEL_ROWS)[
-                ["algorithm", "accuracy", "precision", "recall", "f1",
-                 "macro_f1", "roc_auc", "cv_score", "majority_baseline"]
-            ].copy()
-            table["algorithm"] = table["algorithm"].map(_pretty)
-            table = table.sort_values(
-                "algorithm", key=lambda s: s.map(
-                    {_pretty(m["algorithm"]): i
-                     for i, m in enumerate(ranked)})
-            )
-            st.dataframe(
-                table, hide_index=True, width="stretch",
-                column_config={
-                    "algorithm": "Algorithm", "accuracy": "Accuracy",
-                    "precision": "Precision", "recall": "Recall",
-                    "f1": "F1", "macro_f1": "Macro-F1",
-                    "roc_auc": "ROC-AUC", "cv_score": "CV F1",
-                    "majority_baseline": "Baseline acc.",
-                },
-            )
-            ui.note(f"Selection rule: {CONVERSION['selection_rule']}. "
-                    f"Majority-class baseline accuracy: "
-                    f"{CONVERSION['majority_baseline']:.1%}. CV F1 is the mean of "
-                    "5 folds on the training split.")
+    with st.container(border=True):
+        ui.section("Metric comparison", "Held-out test split · higher is better")
+        ui.show(ui.grouped_series(
+            [_pretty(m["algorithm"]) for m in MODEL_ROWS],
+            {
+                "F1": [m["f1"] for m in MODEL_ROWS],
+                "Recall": [m["recall"] for m in MODEL_ROWS],
+                "Precision": [m["precision"] for m in MODEL_ROWS],
+                "Accuracy": [m["accuracy"] for m in MODEL_ROWS],
+            },
+            colors=[ui.C["purple_deep"], ui.C["orange"],
+                    ui.C["blue"], ui.C["lavender"]],
+            width=8.8, height=3.4,
+        ))
 
-    with right:
-        with st.container(border=True):
-            ui.section("Metric comparison", "Test split · higher is better")
-            ui.show(ui.grouped_series(
-                [_pretty(m["algorithm"]) for m in MODEL_ROWS],
-                {
-                    "F1": [m["f1"] for m in MODEL_ROWS],
-                    "Recall": [m["recall"] for m in MODEL_ROWS],
-                    "Precision": [m["precision"] for m in MODEL_ROWS],
-                    "Accuracy": [m["accuracy"] for m in MODEL_ROWS],
-                },
-                colors=[ui.C["purple_deep"], ui.C["orange"],
-                        ui.C["blue"], ui.C["lavender"]],
-                width=5.4, height=3.1,
-            ))
+    st.write("")
+    with st.container(border=True):
+        ui.section("Comparison table", f"Ranked by {metric_labels[metric]}")
+        table = pd.DataFrame(MODEL_ROWS)[
+            ["algorithm", "accuracy", "precision", "recall", "f1",
+             "macro_f1", "roc_auc", "cv_score", "majority_baseline"]
+        ].copy()
+        table["algorithm"] = table["algorithm"].map(_pretty)
+        table = table.sort_values(
+            "algorithm", key=lambda s: s.map(
+                {_pretty(m["algorithm"]): i
+                 for i, m in enumerate(ranked)})
+        )
+        st.dataframe(
+            table, hide_index=True, width="stretch",
+            column_config={
+                "algorithm": "Algorithm", "accuracy": "Accuracy",
+                "precision": "Precision", "recall": "Recall",
+                "f1": "F1", "macro_f1": "Macro-F1",
+                "roc_auc": "ROC-AUC", "cv_score": "CV F1",
+                "majority_baseline": "Baseline acc.",
+            },
+        )
+        ui.note(f"Selection rule: {CONVERSION['selection_rule']}. "
+                f"Majority-class baseline accuracy: "
+                f"{CONVERSION['majority_baseline']:.1%}. CV F1 is the mean of "
+                "5 folds on the training split.")
 
     st.write("")
     ui.section("Confusion matrices", "Rows = actual · columns = predicted")
@@ -920,7 +938,7 @@ def page_models():
         with grid[i % 2], st.container(border=True):
             ui.show(ui.confusion(model["confusion_matrix"],
                                  _pretty(model["algorithm"]),
-                                 width=4.4, height=2.5))
+                                 width=4.4, height=2.7))
             ui.note(f"F1 {model['f1']:.3f} · recall {model['recall']:.3f} · "
                     f"precision {model['precision']:.3f} · "
                     f"accuracy {model['accuracy']:.3f}")
@@ -952,40 +970,37 @@ def page_models():
 
     st.write("")
     if EXPERIMENTS:
-        exp_left, exp_right = st.columns(2, gap="large")
-        with exp_left:
-            with st.container(border=True):
-                best_k = EXPERIMENTS["k_sweep_best"]
-                ui.section("KNN K sweep", "5-fold CV · uniform weights, euclidean")
-                ui.show(ui.lines(
-                    [r["k"] for r in EXPERIMENTS["k_sweep"]],
-                    {"Accuracy": [r["cv_accuracy"] for r in EXPERIMENTS["k_sweep"]],
-                     "F1": [r["cv_f1"] for r in EXPERIMENTS["k_sweep"]]},
-                    colors=[ui.C["blue"], ui.C["purple_deep"]],
-                    width=5.6, height=2.6,
-                    vline=(best_k["k"], f"best F1 k={best_k['k']}"),
-                ))
-                ui.note("The curve is flat; k = 1 is marginally highest, well "
-                        "inside fold noise. The main grid searched 3–15 and chose "
-                        f"k = {next(m['best_params']['n_neighbors'] for m in MODEL_ROWS if m['algorithm'] == 'KNN')}. "
-                        "No single k is statistically special.")
-        with exp_right:
-            with st.container(border=True):
-                ui.section("Test-size experiment", "Fixed hyperparameters · seed 42")
-                sizes = ["0.3", "0.2", "0.1"]
-                rows = EXPERIMENTS["test_sizes"]
-                series = {}
-                for model in ["KNN", "GaussianNB", "LinearSVM", "RBFSVM"]:
-                    series[model] = [
-                        next(r["f1"] for r in rows
-                             if r["model"] == model
-                             and str(r["test_size"]) == size)
-                        for size in sizes
-                    ]
-                ui.show(ui.grouped_bars(sizes, series, width=5.6, height=2.6))
-                ui.note("A 0.1 split leaves 1,200 test rows, so differences of a "
-                        "few thousandths are noise. 0.2 remains the balanced "
-                        "default, not the highest score.")
+        with st.container(border=True):
+            best_k = EXPERIMENTS["k_sweep_best"]
+            ui.section("KNN K sweep", "5-fold CV · uniform weights, euclidean")
+            ui.show(ui.lines(
+                [r["k"] for r in EXPERIMENTS["k_sweep"]],
+                {"Accuracy": [r["cv_accuracy"] for r in EXPERIMENTS["k_sweep"]],
+                 "F1": [r["cv_f1"] for r in EXPERIMENTS["k_sweep"]]},
+                colors=[ui.C["blue"], ui.C["purple_deep"]],
+                width=8.6, height=3.0,
+                vline=(best_k["k"], f"best F1 k={best_k['k']}"),
+            ))
+            ui.note("The curve is flat; k = 1 is marginally highest, well "
+                    "inside fold noise. The main grid searched 3–15 and chose "
+                    f"k = {next(m['best_params']['n_neighbors'] for m in MODEL_ROWS if m['algorithm'] == 'KNN')}. "
+                    "No single k is statistically special.")
+        with st.container(border=True):
+            ui.section("Test-size experiment", "Fixed hyperparameters · seed 42")
+            sizes = ["0.3", "0.2", "0.1"]
+            rows = EXPERIMENTS["test_sizes"]
+            series = {}
+            for model in ["KNN", "GaussianNB", "LinearSVM", "RBFSVM"]:
+                series[model] = [
+                    next(r["f1"] for r in rows
+                         if r["model"] == model
+                         and str(r["test_size"]) == size)
+                    for size in sizes
+                ]
+            ui.show(ui.grouped_bars(sizes, series, width=8.6, height=3.0))
+            ui.note("A 0.1 split leaves 1,200 test rows, so differences of a "
+                    "few thousandths are noise. 0.2 remains the balanced "
+                    "default, not the highest score.")
     else:
         ui.empty("Experiments pending",
                  "Run <code>python3 -m src.experiments</code>.")
@@ -1033,7 +1048,7 @@ def page_segments():
             ui.show(ui.lines(
                 [r["k"] for r in CLUSTERS["elbow"]],
                 {"WCSS": [r["inertia"] for r in CLUSTERS["elbow"]]},
-                colors=[ui.C["purple_deep"]], width=5.6, height=2.6,
+                colors=[ui.C["purple_deep"]], width=5.8, height=2.9,
                 vline=(CLUSTERS["k"], f"chosen k={CLUSTERS['k']}"),
             ))
     with right:
@@ -1042,7 +1057,7 @@ def page_segments():
             ui.show(ui.lines(
                 [r["k"] for r in CLUSTERS["silhouette_by_k"]],
                 {"Silhouette": [r["score"] for r in CLUSTERS["silhouette_by_k"]]},
-                colors=[ui.C["purple"]], width=5.6, height=2.6,
+                colors=[ui.C["purple"]], width=5.8, height=2.9,
                 vline=(CLUSTERS["k"], f"chosen k={CLUSTERS['k']}"),
             ))
 
@@ -1057,33 +1072,36 @@ def page_segments():
                 profiles["customers"].astype(float).tolist(),
                 color=[ui.C["purple_deep"], ui.C["purple"], ui.C["lavender"],
                        ui.C["blue"], ui.C["pink"]],
-                width=5.4, height=2.4, fmt="{:,.0f}",
+                width=5.8, height=2.5, fmt="{:,.0f}",
             ))
     with right:
         with st.container(border=True):
-            ui.section("Dendrogram", "Ward linkage · 300-customer sample")
-            path = FIGURES / "dendrogram.png"
+            ui.section("K-Means segments", "PCA view · full sample")
+            path = FIGURES / "kmeans_pca.png"
             if path.exists():
                 st.image(path, width="stretch")
             else:
-                ui.empty("Figure missing", "Re-run <code>python3 -m src.clustering</code>.")
+                ui.empty("Figure missing",
+                         "Re-run <code>python3 -m src.clustering</code>.")
 
     st.write("")
-    left, right = st.columns(2, gap="large")
-    for col, name, title, sub in [
-        (left, "kmeans_pca.png", "K-Means segments", "PCA view · full sample"),
-        (right, "hierarchical_pca.png", "Hierarchical segments",
-         "PCA view · Ward sample"),
-    ]:
-        with col:
-            with st.container(border=True):
-                ui.section(title, sub)
-                path = FIGURES / name
-                if path.exists():
-                    st.image(path, width="stretch")
-                else:
-                    ui.empty("Figure missing",
-                             "Re-run <code>python3 -m src.clustering</code>.")
+    with st.container(border=True):
+        ui.section("Dendrogram", "Ward linkage · 300-customer sample")
+        path = FIGURES / "dendrogram.png"
+        if path.exists():
+            st.image(path, width="stretch")
+        else:
+            ui.empty("Figure missing", "Re-run <code>python3 -m src.clustering</code>.")
+
+    st.write("")
+    with st.container(border=True):
+        ui.section("Hierarchical segments", "PCA view · Ward sample")
+        path = FIGURES / "hierarchical_pca.png"
+        if path.exists():
+            st.image(path, width="stretch")
+        else:
+            ui.empty("Figure missing",
+                     "Re-run <code>python3 -m src.clustering</code>.")
 
     st.write("")
     with st.container(border=True):
@@ -1108,6 +1126,104 @@ def page_segments():
 
 
 # --------------------------------------------------------------- dataset page ---
+
+def render_outlier_tab():
+    with st.container(border=True):
+        ui.section("Outlier analysis",
+                   "IQR rule · observations are flagged, never removed")
+        st.markdown(
+            "A value is flagged when it lies outside "
+            "`Q1 − 1.5 × IQR` and `Q3 + 1.5 × IQR`, where "
+            "`IQR = Q3 − Q1`. This is one convention, not a verdict: a value "
+            "outside the fences can be a real high-performing ad or an "
+            "unusually wealthy customer. **Nothing is deleted, capped or "
+            "excluded from training or prediction** — the flags only describe "
+            "the data. A z-score, isolation forest or domain limit would flag "
+            "a different set."
+        )
+
+    source = st.radio("Dataset", ["Bank customers", "Campaign ads"],
+                      horizontal=True, key="outlier_source")
+    if source == "Bank customers":
+        try:
+            frame = bank_frame()
+        except Exception as exc:
+            ui.empty("Bank dataset not available", str(exc))
+            return
+        columns, ylabel = BANK_OUTLIER_COLUMNS, "Customers"
+    else:
+        if ADS is None:
+            ui.empty("Campaign dataset not available",
+                     ADS_INFO.get("error", "Place the CSV in data/raw."))
+            return
+        frame, columns, ylabel = ADS, CAMPAIGN_OUTLIER_COLUMNS, "Ads"
+
+    with st.container(border=True):
+        ui.section("Features", "Original units · missing values excluded")
+        chosen = st.multiselect(
+            "Numeric features to inspect", columns, default=columns,
+            format_func=lambda c: OUTLIER_LABELS.get(c, c),
+            key=f"outlier_columns_{source}",
+        )
+    if not chosen:
+        ui.empty("No features selected",
+                 "Pick at least one numeric feature to calculate the IQR fences.")
+        return
+
+    table = iqr_table(frame, chosen, OUTLIER_LABELS)
+    series = series_for(frame, chosen, OUTLIER_LABELS)
+    flags = dict(zip(table["feature"], table["flagged"]))
+    fences = {row.feature: (row.lower, row.upper) for row in table.itertuples()}
+
+    with st.container(border=True):
+        ui.section("IQR summary", "All values in each feature's original unit")
+        view = table.rename(columns={
+            "feature": "Feature", "count": "Observations",
+            "missing": "Missing", "q1": "Q1", "q3": "Q3", "iqr": "IQR",
+            "lower": "Lower bound", "upper": "Upper bound",
+            "flagged": "Flagged", "share": "Share flagged",
+        })[["Feature", "Observations", "Missing", "Q1", "Q3", "IQR",
+            "Lower bound", "Upper bound", "Flagged", "Share flagged"]].copy()
+        view["Share flagged"] = view["Share flagged"] * 100
+        st.dataframe(
+            view, hide_index=True, width="stretch",
+            column_config={
+                "Feature": st.column_config.TextColumn(width="medium"),
+                "Observations": st.column_config.NumberColumn(format="%d"),
+                "Missing": st.column_config.NumberColumn(format="%d"),
+                "Q1": st.column_config.NumberColumn(format="%.2f"),
+                "Q3": st.column_config.NumberColumn(format="%.2f"),
+                "IQR": st.column_config.NumberColumn(format="%.2f"),
+                "Lower bound": st.column_config.NumberColumn(format="%.2f"),
+                "Upper bound": st.column_config.NumberColumn(format="%.2f"),
+                "Flagged": st.column_config.NumberColumn(format="%d"),
+                "Share flagged": st.column_config.NumberColumn(format="%.1f%%"),
+            },
+        )
+        st.markdown(describe_flags(table))
+
+    with st.container(border=True):
+        ui.section("Box plots", "Box = Q1 to Q3 · whiskers = 1.5 × IQR · "
+                                "orange dots = flagged")
+        ui.show(ui.box_grid(series, flags, ncols=2, width=10.0))
+
+    with st.container(border=True):
+        ui.section("Distributions", "Dashed lines mark the IQR fences")
+        log_view = st.checkbox(
+            "Log view (log1p) for skewed features", value=False,
+            help="Visual only: applies to non-negative features. The table "
+                 "always stays in the original units.",
+            key="outlier_log",
+        )
+        if log_view and any(values.min() < 0 for values in series.values()):
+            ui.note("Features containing negative values stay linear in this "
+                    "view; a log1p axis cannot represent them.")
+        ui.show(ui.hist_grid(series, fences, log=log_view, ylabel=ylabel,
+                             ncols=2, width=10.0))
+        ui.note("The IQR method depends on the selected features and the 1.5 "
+                "multiplier. Treat flags as prompts for a closer look, not as "
+                "rows to delete.")
+
 
 def page_dataset():
     ui.page_header(
@@ -1136,8 +1252,8 @@ def page_dataset():
                f"Best: {_pretty(CONVERSION['best_model'])}", "clock", "orange")
 
     st.write("")
-    tab_data, tab_prep, tab_train, tab_exp = st.tabs(
-        ["Datasets", "Preprocessing", "Training & metrics", "Experiments"]
+    tab_data, tab_outlier, tab_prep, tab_train, tab_exp = st.tabs(
+        ["Datasets", "Outliers", "Preprocessing", "Training", "Experiments"]
     )
 
     with tab_data:
@@ -1155,13 +1271,13 @@ def page_dataset():
             ])
             st.markdown(f"[Open the official dataset]"
                         f"({CONVERSION['dataset']['source']})")
-        with right, st.container(border=True):
+        with right, st.container(border=True, key="donut_dataset"):
             ui.section("Class distribution", "Target y")
             pos = float(CONVERSION["positive_rate"])
             ui.show(ui.donut(
                 ["No", "Yes"], [1 - pos, pos],
                 [ui.C["lavender"], ui.C["purple_deep"]],
-                _pct(pos), "subscribed", width=4.2, height=2.6,
+                _pct(pos), "subscribed", width=4.6, height=2.9,
             ))
             ui.note("The imbalance is why the model is selected on positive-class "
                     "F1 and why accuracy alone is reported next to a majority "
@@ -1180,6 +1296,9 @@ def page_dataset():
                 st.markdown(f"[Open the Kaggle dataset]({ADS_INFO['source']})")
             else:
                 ui.empty("Campaign dataset not found", ADS_INFO.get("error", ""))
+
+    with tab_outlier:
+        render_outlier_tab()
 
     with tab_prep:
         with st.container(border=True):
@@ -1264,21 +1383,21 @@ def page_dataset():
                         f"{folds_badge}  "
                         f"{ui.badge('Seed 42', 'blue')}",
                         unsafe_allow_html=True)
-            left, right = st.columns(2, gap="large")
-            with left, st.container(border=True):
+            with st.container(border=True):
                 ui.section("KNN K sweep", "K = 1…15")
                 ui.show(ui.lines(
                     [r["k"] for r in EXPERIMENTS["k_sweep"]],
                     {"Accuracy": [r["cv_accuracy"] for r in EXPERIMENTS["k_sweep"]],
                      "F1": [r["cv_f1"] for r in EXPERIMENTS["k_sweep"]]},
                     colors=[ui.C["blue"], ui.C["purple_deep"]],
-                    width=5.6, height=2.6,
+                    width=8.6, height=3.0,
                     vline=(EXPERIMENTS["k_sweep_best"]["k"],
                            f"best k={EXPERIMENTS['k_sweep_best']['k']}"),
                 ))
-                st.dataframe(pd.DataFrame(EXPERIMENTS["k_sweep"]),
-                             hide_index=True, width="stretch", height=210)
-            with right, st.container(border=True):
+                with st.expander("Show K sweep values"):
+                    st.dataframe(pd.DataFrame(EXPERIMENTS["k_sweep"]),
+                                 hide_index=True, width="stretch", height=240)
+            with st.container(border=True):
                 ui.section("Test-size experiment", "0.3 / 0.2 / 0.1")
                 ui.show(ui.grouped_bars(
                     ["0.3", "0.2", "0.1"],
@@ -1287,10 +1406,11 @@ def page_dataset():
                               and str(r["test_size"]) == s)
                          for s in ("0.3", "0.2", "0.1")]
                      for m in ["KNN", "GaussianNB", "LinearSVM", "RBFSVM"]},
-                    width=5.6, height=2.6,
+                    width=8.6, height=3.0,
                 ))
-                st.dataframe(pd.DataFrame(EXPERIMENTS["test_sizes"]),
-                             hide_index=True, width="stretch", height=210)
+                with st.expander("Show test-size values"):
+                    st.dataframe(pd.DataFrame(EXPERIMENTS["test_sizes"]),
+                                 hide_index=True, width="stretch", height=240)
             ui.note(EXPERIMENTS["test_size_note"])
 
 
