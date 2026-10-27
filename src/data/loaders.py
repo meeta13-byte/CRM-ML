@@ -112,7 +112,9 @@ def load_campaign_ads(path=None):
     df = df.dropna(subset=["spent"]).copy()
     df = df[df["spent"] >= MIN_SPEND].copy()
 
-    df["campaign"] = df["xyz_campaign_id"].astype(str)
+    cid = df["xyz_campaign_id"].astype(str)
+    campaign_map = {"916": "Campaign 1", "936": "Campaign 2", "1178": "Campaign 3"}
+    df["campaign"] = cid.map(campaign_map).fillna(cid)
     df["interest"] = df["interest"].astype(str)
     approved = pd.to_numeric(df["approved_conversion"], errors="coerce").fillna(0.0)
     clicks = pd.to_numeric(df["clicks"], errors="coerce").fillna(0.0)
