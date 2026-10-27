@@ -1,4 +1,4 @@
-"""MarketMind AI — CRM marketing intelligence.
+"""CRM-Adv — CRM marketing intelligence.
 
     streamlit run app/streamlit_app.py
 
@@ -32,7 +32,7 @@ from src.outliers import describe_flags, iqr_table, series_for  # noqa: E402
 from src.predict import load_meta, score, score_all  # noqa: E402
 
 st.set_page_config(
-    page_title="MarketMind AI",
+    page_title="CRM-Adv",
     page_icon=":material/insights:",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -182,7 +182,7 @@ st.session_state.setdefault("page", "Dashboard")
 with st.sidebar:
     st.markdown(
         f'<div class="mm-brand"><div class="mm-brand-mark">{ui.icon("chart", 19, 2)}</div>'
-        '<div><div class="mm-brand-name">MarketMind AI</div>'
+        '<div><div class="mm-brand-name">CRM-Adv</div>'
         '<div class="mm-brand-sub">CRM Marketing Intelligence</div></div></div>',
         unsafe_allow_html=True,
     )
@@ -1657,14 +1657,14 @@ def page_settings():
 def page_about():
     ui.page_header(
         "About",
-        "What MarketMind AI does, which data it uses and what it cannot do.",
+        "What CRM-Adv does, which data it uses and what it cannot do.",
     )
     left, right = st.columns([1.35, 1], gap="large")
     with left:
         with st.container(border=True):
             ui.section("Project", "Machine-learning CRM marketing intelligence")
             st.markdown(
-                "MarketMind AI combines three modules in one Streamlit app:\n\n"
+                "CRM-Adv combines three modules in one Streamlit app:\n\n"
                 "1. **Lead conversion prediction** — KNN, Gaussian Naive Bayes, "
                 "Linear SVM and RBF SVM on the UCI Bank Marketing dataset, with "
                 "one shared target, split and preprocessing pipeline.\n"
@@ -1732,5 +1732,5 @@ PAGES = {
 PAGES.get(st.session_state.page, page_dashboard)()
 
 st.markdown('<div class="mm-divider"></div>', unsafe_allow_html=True)
-st.caption("MarketMind AI · CRM Marketing Intelligence · estimates, not "
+st.caption("CRM-Adv · CRM Marketing Intelligence · estimates, not "
            "guarantees · data/raw files stay local")

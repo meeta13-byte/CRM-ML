@@ -1,4 +1,4 @@
-"""MarketMind AI design system: CSS, cards, charts.
+"""CRM-Adv design system: CSS, cards, charts.
 
 The palette is defined once in ``src/config.py`` and imported here, so the
 Streamlit pages and the saved figures cannot drift apart.
@@ -299,7 +299,7 @@ def inject():
     st.markdown(CSS, unsafe_allow_html=True)
 
 
-def page_header(title, subtitle, crumb="MarketMind AI"):
+def page_header(title, subtitle, crumb="CRM-Adv"):
     st.markdown(
         f'<div class="mm-crumbs">{crumb} / <b>{title}</b></div>'
         f'<div class="mm-title">{title}</div>'
