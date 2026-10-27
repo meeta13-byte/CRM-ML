@@ -142,15 +142,15 @@ section[data-testid="stSidebar"] [data-testid="stSidebarContent"] {{ padding: 0.
   display: flex; align-items: center; justify-content: center; color: white;
   box-shadow: 0 4px 10px rgba(121, 105, 232, 0.24);
 }}
-.mm-brand-name {{ font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }}
-.mm-brand-sub {{ font-size: 10px; color: {C['muted']}; margin-top: 1px; }}
+.mm-brand-name {{ font-size: 17.25px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }}
+.mm-brand-sub {{ font-size: 11.5px; color: {C['muted']}; margin-top: 1px; }}
 .mm-nav-section {{
-  font-size: 9.5px; font-weight: 700; letter-spacing: 0.13em; color: #A0A3AC;
+  font-size: 10.92px; font-weight: 700; letter-spacing: 0.13em; color: #A0A3AC;
   margin: 14px 8px 3px; text-transform: uppercase;
 }}
 section[data-testid="stSidebar"] .stButton > button {{
   justify-content: flex-start; width: 100%; border: 1px solid transparent;
-  background: transparent; color: #4B4F58; font-weight: 500; font-size: 12.5px;
+  background: transparent; color: #4B4F58; font-weight: 500; font-size: 14.37px;
   border-radius: 9px; padding: 0.42rem 0.65rem; min-height: 2.1rem;
   box-shadow: none; transition: background 120ms ease, color 120ms ease;
 }}
@@ -164,24 +164,24 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {{
 section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {{
   background: #E2DCFF; color: {C['purple_deep']};
 }}
-section[data-testid="stSidebar"] button p {{ font-size: 12.5px; }}
+section[data-testid="stSidebar"] button p {{ font-size: 14.37px; }}
 .mm-profile {{
   display: flex; align-items: center; gap: 9px; border-top: 1px solid {C['border']};
   margin-top: 16px; padding: 14px 6px 2px;
 }}
 .mm-avatar {{
   width: 30px; height: 30px; border-radius: 50%; background: {C['lavender']};
-  color: {C['purple_deep']}; font-size: 10.5px; font-weight: 700;
+  color: {C['purple_deep']}; font-size: 12.07px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }}
-.mm-profile-name {{ font-size: 11.5px; font-weight: 600; }}
-.mm-profile-sub {{ font-size: 9.5px; color: {C['muted']}; }}
+.mm-profile-name {{ font-size: 13.22px; font-weight: 600; }}
+.mm-profile-sub {{ font-size: 10.92px; color: {C['muted']}; }}
 
 /* ----------------------------------------------------------------- header */
-.mm-crumbs {{ font-size: 10.5px; color: #9A9DA6; margin-bottom: 7px; letter-spacing: 0.01em; }}
+.mm-crumbs {{ font-size: 12.07px; color: #9A9DA6; margin-bottom: 7px; letter-spacing: 0.01em; }}
 .mm-crumbs b {{ color: {C['purple_deep']}; font-weight: 600; }}
-.mm-title {{ font-size: 26px; line-height: 1.2; font-weight: 700; letter-spacing: -0.025em; }}
-.mm-sub {{ font-size: 12.5px; color: {C['muted']}; margin-top: 4px; margin-bottom: 18px; }}
+.mm-title {{ font-size: 29.9px; line-height: 1.2; font-weight: 700; letter-spacing: -0.025em; }}
+.mm-sub {{ font-size: 14.37px; color: {C['muted']}; margin-top: 4px; margin-bottom: 18px; }}
 
 /* ------------------------------------------------------------------ cards */
 /* Streamlit 1.50: a bordered container is a vertical block inside a layout wrapper. */
@@ -194,19 +194,19 @@ div[data-testid="stLayoutWrapper"] > div[data-testid="stVerticalBlock"] {{
   padding: 15px 16px 13px; box-shadow: 0 1px 2px rgba(23,23,23,0.03); height: 100%;
 }}
 .mm-kpi-top {{ display: flex; align-items: center; justify-content: space-between; }}
-.mm-kpi-label {{ font-size: 10.8px; color: {C['muted']}; font-weight: 500; }}
+.mm-kpi-label {{ font-size: 12.42px; color: {C['muted']}; font-weight: 500; }}
 .mm-kpi-icon {{
   width: 27px; height: 27px; border-radius: 8px; display: flex;
   align-items: center; justify-content: center;
 }}
-.mm-kpi-value {{ font-size: 24px; font-weight: 700; letter-spacing: -0.03em; margin-top: 8px; line-height: 1.1; }}
-.mm-kpi-help {{ font-size: 9.8px; color: #9A9DA6; margin-top: 4px; line-height: 1.35; }}
+.mm-kpi-value {{ font-size: 27.6px; font-weight: 700; letter-spacing: -0.03em; margin-top: 8px; line-height: 1.1; }}
+.mm-kpi-help {{ font-size: 11.27px; color: #9A9DA6; margin-top: 4px; line-height: 1.35; }}
 
-.mm-section-title {{ font-size: 13px; font-weight: 650; letter-spacing: -0.01em; }}
-.mm-section-sub {{ font-size: 10.5px; color: {C['muted']}; margin-top: 1px; }}
+.mm-section-title {{ font-size: 14.95px; font-weight: 650; letter-spacing: -0.01em; }}
+.mm-section-sub {{ font-size: 12.07px; color: {C['muted']}; margin-top: 1px; }}
 .mm-badge {{
   display: inline-flex; align-items: center; gap: 4px; padding: 2.5px 8px;
-  border-radius: 999px; font-size: 9.5px; font-weight: 600; white-space: nowrap;
+  border-radius: 999px; font-size: 10.92px; font-weight: 600; white-space: nowrap;
 }}
 .mm-badge.lavender {{ background: {C['lavender']}; color: {C['purple_deep']}; }}
 .mm-badge.green {{ background: #E7F7F0; color: #17835C; }}
@@ -216,31 +216,31 @@ div[data-testid="stLayoutWrapper"] > div[data-testid="stVerticalBlock"] {{
 .mm-badge.grey {{ background: #F2F3F6; color: #6B6F78; }}
 .mm-empty {{
   border: 1px dashed #DEDFE7; border-radius: 13px; background: #FCFCFE;
-  padding: 22px 18px; text-align: center; color: {C['muted']}; font-size: 11.5px;
+  padding: 22px 18px; text-align: center; color: {C['muted']}; font-size: 13.22px;
   line-height: 1.55;
 }}
-.mm-empty strong {{ display: block; color: {C['text']}; font-size: 12.5px; margin-bottom: 3px; }}
-.mm-note {{ font-size: 10.5px; color: {C['muted']}; line-height: 1.55; }}
+.mm-empty strong {{ display: block; color: {C['text']}; font-size: 14.37px; margin-bottom: 3px; }}
+.mm-note {{ font-size: 12.07px; color: {C['muted']}; line-height: 1.55; }}
 .mm-stat {{ display: flex; justify-content: space-between; align-items: baseline;
-  padding: 7px 0; border-bottom: 1px solid #F1F1F5; font-size: 11px; }}
+  padding: 7px 0; border-bottom: 1px solid #F1F1F5; font-size: 12.65px; }}
 .mm-stat:last-child {{ border-bottom: none; }}
 .mm-stat span {{ color: {C['muted']}; }}
 .mm-stat b {{ font-weight: 600; }}
 .mm-activity {{ display: flex; align-items: center; gap: 9px; padding: 7px 0;
-  border-bottom: 1px solid #F2F2F6; font-size: 11px; }}
+  border-bottom: 1px solid #F2F2F6; font-size: 12.65px; }}
 .mm-activity:last-child {{ border-bottom: none; }}
-.mm-activity-time {{ margin-left: auto; color: #A0A3AC; font-size: 9.8px; white-space: nowrap; }}
+.mm-activity-time {{ margin-left: auto; color: #A0A3AC; font-size: 11.27px; white-space: nowrap; }}
 .mm-swatch {{ display: inline-block; width: 100%; height: 38px; border-radius: 9px; }}
-.mm-mini-label {{ font-size: 10px; color: {C['muted']}; font-weight: 500; }}
-.mm-mini-value {{ font-size: 19px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; }}
-.mm-mini-help {{ font-size: 9.5px; color: #A0A3AC; margin-top: 2px; }}
-.mm-result-label {{ font-size: 10.5px; color: {C['muted']}; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }}
-.mm-result-value {{ font-size: 38px; font-weight: 700; letter-spacing: -0.04em; line-height: 1.05; margin: 5px 0 2px; }}
+.mm-mini-label {{ font-size: 11.5px; color: {C['muted']}; font-weight: 500; }}
+.mm-mini-value {{ font-size: 21.85px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; }}
+.mm-mini-help {{ font-size: 10.92px; color: #A0A3AC; margin-top: 2px; }}
+.mm-result-label {{ font-size: 12.07px; color: {C['muted']}; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }}
+.mm-result-value {{ font-size: 43.7px; font-weight: 700; letter-spacing: -0.04em; line-height: 1.05; margin: 5px 0 2px; }}
 .mm-divider {{ border-top: 1px solid {C['border']}; margin: 4px 0 2px; }}
 
 /* --------------------------------------------------------------- controls */
 .stButton > button {{
-  border-radius: 9px; font-weight: 600; font-size: 12px; padding: 0.42rem 0.9rem;
+  border-radius: 9px; font-weight: 600; font-size: 13.8px; padding: 0.42rem 0.9rem;
   border: 1px solid {C['border']}; background: white; color: {C['text']};
   box-shadow: none; transition: all 120ms ease;
 }}
@@ -249,7 +249,7 @@ div[data-testid="stLayoutWrapper"] > div[data-testid="stVerticalBlock"] {{
 .stButton > button[kind="primary"]:hover {{ background: #574AC7; border-color: #574AC7; color: white; }}
 .stDownloadButton > button {{
   border-radius: 9px; border: 1px solid {C['border']}; background: white;
-  color: {C['text']}; font-size: 12px; font-weight: 600;
+  color: {C['text']}; font-size: 13.8px; font-weight: 600;
 }}
 .stDownloadButton > button:hover {{ background: {C['hover']}; border-color: #D8D2F8; color: {C['purple_deep']}; }}
 
@@ -264,14 +264,14 @@ div[data-baseweb="textarea"]:focus-within {{
   border-color: {C['purple']} !important;
   box-shadow: 0 0 0 3px {C['lavender']} !important;
 }}
-label p {{ font-size: 11px !important; color: #4B4F58 !important; font-weight: 500 !important; }}
+label p {{ font-size: 12.65px !important; color: #4B4F58 !important; font-weight: 500 !important; }}
 div[data-testid="stWidgetLabel"] p {{ margin-bottom: 2px; }}
-div[data-baseweb="radio"] label p {{ font-size: 11.5px !important; }}
-div[data-testid="stCheckbox"] label p {{ font-size: 11.5px !important; }}
+div[data-baseweb="radio"] label p {{ font-size: 13.22px !important; }}
+div[data-testid="stCheckbox"] label p {{ font-size: 13.22px !important; }}
 
 /* ------------------------------------------------------------------ tabs */
 .stTabs [data-baseweb="tab-list"] {{ gap: 1.1rem; border-bottom: 1px solid {C['border']}; }}
-.stTabs [data-baseweb="tab"] {{ padding: 0.35rem 0.1rem 0.5rem; color: {C['muted']}; font-size: 12px; font-weight: 500; }}
+.stTabs [data-baseweb="tab"] {{ padding: 0.35rem 0.1rem 0.5rem; color: {C['muted']}; font-size: 13.8px; font-weight: 500; }}
 .stTabs [aria-selected="true"] {{ color: {C['purple_deep']}; font-weight: 600; }}
 .stTabs [data-baseweb="tab-highlight"] {{ background: {C['purple_deep']}; height: 2px; }}
 .stTabs [data-baseweb="tab-border"] {{ background: transparent; }}
@@ -281,15 +281,15 @@ div[data-testid="stExpander"] {{
   border: 1px solid {C['border']}; border-radius: 12px; background: white;
   box-shadow: none; overflow: hidden;
 }}
-div[data-testid="stExpander"] summary {{ font-size: 11.5px; font-weight: 600; color: #3F4248; }}
+div[data-testid="stExpander"] summary {{ font-size: 13.22px; font-weight: 600; color: #3F4248; }}
 div[data-testid="stDataFrame"] {{
   border: 1px solid {C['border']}; border-radius: 12px; overflow: hidden;
   background: white;
 }}
-div[data-testid="stAlert"] {{ border-radius: 12px; font-size: 11.5px; border: 1px solid transparent; }}
+div[data-testid="stAlert"] {{ border-radius: 12px; font-size: 13.22px; border: 1px solid transparent; }}
 div[data-testid="stAlert"]:has(svg[title="Info"]) {{ background: #F6F4FF; }}
 hr {{ border-color: {C['border']}; margin: 1.1rem 0; }}
-.stCaption, [data-testid="stCaptionContainer"] {{ font-size: 10.5px; color: {C['muted']}; }}
+.stCaption, [data-testid="stCaptionContainer"] {{ font-size: 12.07px; color: {C['muted']}; }}
 .stProgress > div > div > div > div {{ background: {C['purple_deep']}; }}
 </style>
 """
