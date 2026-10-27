@@ -23,6 +23,7 @@ from src.history import (  # noqa: E402
     get_campaign, get_prediction, list_campaigns, list_predictions,
     save_campaign, save_prediction, set_actual,
 )
+from src.outliers import iqr_table  # noqa: E402
 from sklearn.neighbors import KNeighborsClassifier  # noqa: E402
 
 
@@ -126,6 +127,18 @@ def main():
                             "Awareness", lead["method"], path=db)
         assert list_campaigns(path=db).iloc[0]["objective"] == "Awareness"
         assert get_campaign(rid, path=db)["result"]["estimated_cpm"] == 0.3
+
+        # IQR flags: known quartiles for this fixture, and no rows are dropped.
+        frame = pd.DataFrame({"x": [10, 12, 14, 16, 18, 20, 22, 100],
+                              "label": ["keep"] * 8})
+        table = iqr_table(frame, ["x"], {"x": "X"})
+        row = table.iloc[0]
+        assert row.feature == "X" and row["count"] == 8
+        assert abs(row.q1 - 13.5) < 1e-9 and abs(row.q3 - 20.5) < 1e-9
+        assert abs(row.lower - 3.0) < 1e-9 and abs(row.upper - 31.0) < 1e-9
+        assert row.flagged == 1 and abs(row.share - 1 / 8) < 1e-9
+        assert len(frame) == 8, "outlier analysis must not drop rows"
+        assert frame.loc[7, "x"] == 100, "outlier analysis must not alter values"
 
     print("smoke ok: bank loader, leakage guard, preprocessing, KNN, campaign "
           "benchmark, SQLite history")
