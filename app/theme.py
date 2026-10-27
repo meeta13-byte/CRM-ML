@@ -90,6 +90,40 @@ header[data-testid="stHeader"] {{ background: {C['page']}; }}
 #MainMenu, footer {{ visibility: hidden; }}
 .block-container {{ max-width: 1280px; padding: 1.4rem 1.8rem 3rem; }}
 
+/* Streamlit 1.50 collapse: a stretched chart inside a bordered column reports
+   the column gap (16px) as its width. Force image wrappers to fill the card. */
+[data-testid="stImage"], [data-testid="stImageContainer"] {{ width: 100% !important; }}
+[data-testid="stImageContainer"] img {{ width: 100% !important; height: auto !important; }}
+
+/* Five tabs on a 768px viewport: trim the tab padding instead of scrolling. */
+[data-testid="stTabs"] button[role="tab"] {{ padding-left: 0.5rem; padding-right: 0.5rem; }}
+
+/* A donut is a small visual: cap it instead of stretching it full width when
+   its column stacks. */
+.st-key-donut_dashboard [data-testid="stImage"],
+.st-key-donut_dashboard [data-testid="stImageContainer"],
+.st-key-donut_dataset [data-testid="stImage"],
+.st-key-donut_dataset [data-testid="stImageContainer"] {{ max-width: 420px !important; }}
+
+/* Narrow viewports: columns stack so charts and forms keep a usable width. */
+@media (max-width: 900px) {{
+  [data-testid="stHorizontalBlock"] {{ flex-direction: column; gap: 0.9rem; }}
+  [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {{
+    width: 100% !important; flex: 1 1 100% !important;
+  }}
+}}
+
+/* On tablet widths a 1/3 chart column is too narrow; stack only rows that
+   contain a figure, leaving form and KPI columns side by side. */
+@media (max-width: 1100px) {{
+  [data-testid="stHorizontalBlock"]:has([data-testid="stImage"]) {{
+    flex-direction: column; gap: 0.9rem;
+  }}
+  [data-testid="stHorizontalBlock"]:has([data-testid="stImage"]) > [data-testid="stColumn"] {{
+    width: 100% !important; flex: 1 1 100% !important;
+  }}
+}}
+
 /* ---------------------------------------------------------------- sidebar */
 section[data-testid="stSidebar"] {{
   background: {C['sidebar']};
@@ -448,6 +482,91 @@ def donut(labels, values, colors=None, center_top="", center_bottom="",
               frameon=False, fontsize=8)
     ax.set_aspect("equal")
     fig.tight_layout()
+    return fig
+
+
+def box_grid(series, flags=None, ncols=3, width=11.5, row_height=1.75):
+    """Small-multiple box plots, one per feature, in original units.
+
+    ``series`` maps a display label to a numeric array; ``flags`` optionally
+    maps the same label to a flagged count for the axis note.
+    """
+    import math
+
+    n = len(series)
+    rows = max(1, math.ceil(n / ncols))
+    fig, axes = plt.subplots(rows, ncols, figsize=(width, row_height * rows),
+                             dpi=150, squeeze=False)
+    fig.patch.set_facecolor(C["workspace"])
+    flags = flags or {}
+    for ax, (label, values) in zip(axes.flat, series.items()):
+        ax.set_facecolor(C["workspace"])
+        ax.boxplot(values, vert=False, widths=0.5, whis=1.5,
+                   patch_artist=True,
+                   boxprops={"facecolor": C["lavender"], "edgecolor": C["purple_deep"],
+                             "linewidth": 1.1},
+                   medianprops={"color": C["purple_deep"], "linewidth": 1.6},
+                   whiskerprops={"color": C["muted"], "linewidth": 0.9},
+                   capprops={"color": C["muted"], "linewidth": 0.9},
+                   flierprops={"marker": "o", "markersize": 3,
+                               "markerfacecolor": C["orange"],
+                               "markeredgecolor": "none", "alpha": 0.7})
+        ax.set_yticks([])
+        ax.set_title(label, fontsize=9.5, loc="left", pad=5)
+        note = f"{len(values):,} values"
+        if label in flags:
+            note += f" · {flags[label]:,} flagged"
+        ax.set_xlabel(note, fontsize=7.5, color=C["muted"])
+        ax.tick_params(colors=C["muted"], labelsize=7.5, length=0, pad=3)
+        for side in ("top", "right", "left"):
+            ax.spines[side].set_visible(False)
+        ax.spines["bottom"].set_color(C["border"])
+        ax.xaxis.grid(True, color="#F0F0F5", linewidth=0.8)
+        ax.set_axisbelow(True)
+    for ax in list(axes.flat)[n:]:
+        ax.set_visible(False)
+    fig.tight_layout(h_pad=1.6, w_pad=1.4)
+    return fig
+
+
+def hist_grid(series, fences=None, log=False, ylabel="Records", ncols=3,
+              width=11.5, row_height=1.85):
+    """Small-multiple histograms with the IQR fences marked."""
+    import math
+
+    fences = fences or {}
+    n = len(series)
+    rows = max(1, math.ceil(n / ncols))
+    fig, axes = plt.subplots(rows, ncols, figsize=(width, row_height * rows),
+                             dpi=150, squeeze=False)
+    fig.patch.set_facecolor(C["workspace"])
+    for ax, (label, values) in zip(axes.flat, series.items()):
+        ax.set_facecolor(C["workspace"])
+        plot_values, axis_note = values, label
+        bounds = fences.get(label)
+        if log and values.min() >= 0:
+            plot_values = np.log1p(values)
+            if bounds is not None:
+                bounds = np.log1p(np.maximum(bounds, 0))
+            axis_note = f"log(1 + {label})"
+        ax.hist(plot_values, bins=30, color=C["purple"], edgecolor="white",
+                linewidth=0.5, zorder=3)
+        if bounds is not None:
+            for bound in bounds:
+                ax.axvline(bound, color=C["orange"], linestyle="--",
+                           linewidth=1, zorder=4)
+        ax.set_title(axis_note, fontsize=9.5, loc="left", pad=5)
+        ax.set_ylabel(ylabel, fontsize=7.5, color=C["muted"])
+        ax.tick_params(colors=C["muted"], labelsize=7.5, length=0, pad=3)
+        for side in ("top", "right"):
+            ax.spines[side].set_visible(False)
+        for side in ("left", "bottom"):
+            ax.spines[side].set_color(C["border"])
+        ax.yaxis.grid(True, color="#F0F0F5", linewidth=0.8)
+        ax.set_axisbelow(True)
+    for ax in list(axes.flat)[n:]:
+        ax.set_visible(False)
+    fig.tight_layout(h_pad=1.6, w_pad=1.4)
     return fig
 
 
